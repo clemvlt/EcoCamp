@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages - EcoCamp</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+</head>
+<body>
+
+    {% include 'header.html' %}
+
+    <main class="page-section">
+        <div class="welcome-header">
+            <h1>Messages Camping</h1>
+            <p>Communiquez avec les résidents</p>
+        </div>
+
+        <div class="messages-grid">
+            <!-- Message général -->
+            <div class="card-panel">
+                <div class="panel-header">
+                    <h2>Message Général</h2>
+                    <p class="text-muted">Diffuser à tous les résidents</p>
+                </div>
+
+                <div class="input-field">
+                    <label>Votre message</label>
+                    <textarea class="form-textarea" placeholder="Ex: Piscine fermée pour entretien demain..."></textarea>
+                </div>
+
+                <button class="btn-save">Envoyer le message</button>
+            </div>
+
+            <!-- Événement -->
+            <div class="card-panel">
+                <div class="panel-header">
+                    <h2>Événement</h2>
+                    <p class="text-muted">Programmer une animation</p>
+                </div>
+
+                <div class="input-field">
+                    <label>Description de l'événement</label>
+                    <textarea class="form-textarea" placeholder="Ex: Soirée grillades au club house..."></textarea>
+                </div>
+
+                <div class="input-field">
+                    <label>Heure de l'événement</label>
+                    <input type="time" class="form-input">
+                </div>
+
+                <button class="btn-save">Programmer l'événement</button>
+            </div>
+        </div>
+
+        <!-- Messages récents -->
+        <div class="card-panel">
+            <div class="panel-header">
+                <h2>Messages récents</h2>
+                <p class="text-muted">Historique des communications</p>
+            </div>
+
+            <div class="messages-list">
+                <div class="message-item">
+                    <div class="message-header">
+                        <span class="message-type general">Général</span>
+                        <span class="message-date">15/03/2026</span>
+                    </div>
+                    <p class="message-content">Piscine fermée pour entretien demain de 10h à 14h. Merci de votre compréhension.</p>
+                </div>
+                <div class="message-item">
+                    <div class="message-header">
+                        <span class="message-type event">Événement</span>
+                        <span class="message-date">14/03/2026 - 18h30</span>
+                    </div>
+                    <p class="message-content">Soirée grillades au club house ce soir à 19h ! Inscrivez-vous à l'accueil.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>
