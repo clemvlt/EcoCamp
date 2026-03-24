@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quotas - EcoCamp</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <div class="brand">
+                <span class="flower-icon">✿</span>
+                <div class="brand-text">flower <span>campings</span></div>
+            </div>
+            <nav>
+                <a href="index.html" class="nav-item">Accueil</a>
+                <a href="sejours.html" class="nav-item">Séjours</a>
+                <a href="quotas.html" class="nav-item active">Quotas</a>
+                <a href="consommations.html" class="nav-item">Consommations</a>
+                <a href="messages.html" class="nav-item">Messages</a>
+                <a href="deconnexion" class="nav-item">Déconnexion</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="page-section">
+        <div class="welcome-header">
+            <h1>Quotas consommation</h1>
+            <p>Définissez les limites par logement</p>
+        </div>
+
+        <div class="card-panel">
+            <div class="panel-header">
+                <h2>Configurer les quotas</h2>
+                <p class="text-muted">Modifiez les limites d'eau et d'électricité</p>
+            </div>
+
+            <div class="input-field">
+                <label>Sélectionner un logement</label>
+                <select class="form-select">
+                    <option>Mobil-home A1</option>
+                    <option>Mobil-home A2</option>
+                    <option>Chalet B1</option>
+                    <option>Emplacement C3</option>
+                </select>
+            </div>
+
+            <div class="form-grid">
+                <div class="input-field">
+                    <label>Quota Eau (L)</label>
+                    <input type="number" class="form-input" placeholder="150" value="150">
+                </div>
+                <div class="input-field">
+                    <label>Quota Electricité (kWh)</label>
+                    <input type="number" class="form-input" placeholder="60" value="60">
+                </div>
+            </div>
+
+            <button class="btn-save">Enregistrer les quotas</button>
+        </div>
+
+        <div class="card-panel">
+            <div class="panel-header">
+                <h2>Récapitulatif des quotas</h2>
+                <p class="text-muted">État actuel des limites par logement</p>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Logement</th>
+                        <th>Quota Eau (L)</th>
+                        <th>Quota Électricité (kWh)</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Mobil-home A1</td>
+                        <td>150 L</td>
+                        <td>60 kWh</td>
+                        <td><button class="btn-small">Modifier</button></td>
+                    </tr>
+                    <tr>
+                        <td>Mobil-home A2</td>
+                        <td>150 L</td>
+                        <td>60 kWh</td>
+                        <td><button class="btn-small">Modifier</button></td>
+                    </tr>
+                    <tr>
+                        <td>Chalet B1</td>
+                        <td>200 L</td>
+                        <td>80 kWh</td>
+                        <td><button class="btn-small">Modifier</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+</body>
+</html>

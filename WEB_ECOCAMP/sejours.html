@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Séjours - EcoCamp</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <div class="brand">
+                <span class="flower-icon">✿</span>
+                <div class="brand-text">flower <span>campings</span></div>
+            </div>
+            <nav>
+                <a href="index.html" class="nav-item">Accueil</a>
+                <a href="sejours.html" class="nav-item active">Séjours</a>
+                <a href="quotas.html" class="nav-item">Quotas</a>
+                <a href="consommations.html" class="nav-item">Consommations</a>
+                <a href="messages.html" class="nav-item">Messages</a>
+                <a href="deconnexion" class="nav-item">Déconnexion</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="page-section">
+        <div class="welcome-header">
+            <h1>Gestion des séjours</h1>
+            <p>Calendrier et réservations</p>
+        </div>
+
+        <div class="card-panel">
+            <div class="panel-header">
+                <h2>Ajouter un séjour</h2>
+                <p class="text-muted">Remplissez les informations ci-dessous</p>
+            </div>
+
+            <form>
+                <div class="form-grid">
+                    <div class="input-field">
+                        <label>Nom du client</label>
+                        <input type="text" class="form-input" placeholder="Ex: Marie Dubois">
+                    </div>
+                    <div class="input-field">
+                        <label>Numéro d'emplacement</label>
+                        <input type="text" class="form-input" placeholder="Ex: A12">
+                    </div>
+                    <div class="input-field">
+                        <label>Date d'arrivée</label>
+                        <input type="date" class="form-input">
+                    </div>
+                    <div class="input-field">
+                        <label>Date de départ</label>
+                        <input type="date" class="form-input">
+                    </div>
+                </div>
+                <button type="submit" class="btn-save">Enregistrer le séjour</button>
+            </form>
+        </div>
+
+        <div class="card-panel">
+            <div class="panel-header">
+                <h2>Séjours en cours</h2>
+                <p class="text-muted">Liste des réservations actives</p>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Logement</th>
+                        <th>Client</th>
+                        <th>Début</th>
+                        <th>Fin</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Mobil-home A1</td>
+                        <td>Jean Dupont</td>
+                        <td>01/07/2026</td>
+                        <td>10/07/2026</td>
+                        <td><button class="btn-small reset">Reset</button></td>
+                    </tr>
+                    <tr>
+                        <td>Mobil-home A2</td>
+                        <td>Marie Martin</td>
+                        <td>05/07/2026</td>
+                        <td>15/07/2026</td>
+                        <td><button class="btn-small reset">Reset</button></td>
+                    </tr>
+                    <tr>
+                        <td>Chalet B1</td>
+                        <td>Pierre Durand</td>
+                        <td>10/07/2026</td>
+                        <td>20/07/2026</td>
+                        <td><button class="btn-small reset">Reset</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+</body>
+</html>
