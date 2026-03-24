@@ -1,0 +1,16 @@
+{
+    "mqtt": {
+        "broker": "eu1.cloud.thethings.network",
+        "port": 1883,
+        "topic": "v3/projet-ecocamp-mq@ttn/devices/eau-ecocamp-mq/up",
+        "user": "projet-ecocamp-mq@ttn",
+        "password": "NNSXS.V6WQTOUTPR74JB44OUDCXONXATPM6Z4TNZBZCQY.CMVWCYEZKHSL2NMDVAHHYMQOOW7XYVORXR3TEWMY6T5U5XZJPAAQ"
+    },
+    "database": {
+        "host": "172.16.4.102",
+        "port": "3006",
+        "user": "ecocamp",
+        "password": "ecocamp2026",
+        "db_name": "ecocamp"
+    }
+}
