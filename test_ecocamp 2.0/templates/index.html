@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoCamp Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <header>
+        <div class="nav-container">
+            <div class="brand">
+                <span class="flower-icon">✿</span>
+                <div class="brand-text">flower <span>campings</span></div>
+            </div>
+            <nav>
+                <a href="index.html" class="nav-item active">Accueil</a>
+                <a href="sejours.html" class="nav-item">Séjours</a>
+                <a href="quotas.html" class="nav-item">Quotas</a>
+                <a href="consommations.html" class="nav-item">Consommations</a>
+                <a href="messages.html" class="nav-item">Messages</a>
+                <a href="deconnexion" class="nav-item">Déconnexion</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section id="accueil" class="page-section">
+            <div class="welcome-header">
+                <h1>Bienvenue sur votre espace EcoCamp</h1>
+                <p>Veuillez sélectionner une rubrique pour commencer</p>
+            </div>
+
+            <div class="main-grid">
+                <a href="sejours.html" class="menu-card-link">
+                    <div class="menu-card">
+                        <div class="icon-box blue">📅</div>
+                        <h3>Séjours</h3>
+                        <p>Calendrier et réservations</p>
+                    </div>
+                </a>
+
+                <a href="quotas.html" class="menu-card-link">
+                    <div class="menu-card">
+                        <div class="icon-box yellow">⚖️</div>
+                        <h3>Quotas</h3>
+                        <p>Limites eau et électricité</p>
+                    </div>
+                </a>
+
+                <a href="consommations.html" class="menu-card-link">
+                    <div class="menu-card">
+                        <div class="icon-box green">📊</div>
+                        <h3>Consommations</h3>
+                        <p>Analyses et graphiques</p>
+                    </div>
+                </a>
+
+                <a href="messages.html" class="menu-card-link">
+                    <div class="menu-card">
+                        <div class="icon-box red">✉️</div>
+                        <h3>Messages</h3>
+                        <p>Communication résidents</p>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- Exemple de panel secondaire (caché par défaut) -->
+        <section id="sejours" class="page-section" style="display: none;">
+            <div class="card-panel">
+                <div class="panel-header">
+                    <h2>Ajouter un séjour</h2>
+                    <p class="text-muted">Remplissez les informations ci-dessous</p>
+                </div>
+                <form>
+                    <div class="form-grid">
+                        <div class="input-field">
+                            <label>Nom du client</label>
+                            <input type="text" placeholder="Ex: Marie Dubois">
+                        </div>
+                        <div class="input-field">
+                            <label>Numéro d'emplacement</label>
+                            <input type="text" placeholder="Ex: A12">
+                        </div>
+                        <div class="input-field">
+                            <label>Date d'arrivée</label>
+                            <input type="date">
+                        </div>
+                        <div class="input-field">
+                            <label>Date de départ</label>
+                            <input type="date">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-save">Enregistrer le séjour</button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+</body>
+
+</html>
