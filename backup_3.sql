@@ -1,0 +1,522 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.3
+-- https://www.phpmyadmin.net/
+--
+-- Hôte : db
+-- Généré le : lun. 23 mars 2026 à 15:59
+-- Version du serveur : 12.2.2-MariaDB-ubu2404
+-- Version de PHP : 8.3.26
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Base de données : `ecocamp`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `administrateur`
+--
+
+CREATE TABLE `administrateur` (
+  `id_administrateur` bigint(20) NOT NULL,
+  `login_administrateur` varchar(50) NOT NULL,
+  `mdp_administrateur` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Déchargement des données de la table `administrateur`
+--
+
+INSERT INTO `administrateur` (`id_administrateur`, `login_administrateur`, `mdp_administrateur`) VALUES
+(1, 'admin_ecocamp', 'P@ssword2026');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `compteur`
+--
+
+CREATE TABLE `compteur` (
+  `id_compteur` bigint(20) NOT NULL,
+  `index_compteur` float NOT NULL,
+  `reference_compteur` varchar(50) NOT NULL,
+  `id_hebergement` bigint(20) NOT NULL,
+  `id_type_flux` bigint(20) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `consommation`
+--
+
+CREATE TABLE `consommation` (
+  `id_consommation` bigint(20) NOT NULL,
+  `index_consommation` float DEFAULT NULL,
+  `id_type_flux` bigint(20) NOT NULL,
+  `id_hebergement` bigint(20) NOT NULL,
+  `date_consommation` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Déchargement des données de la table `consommation`
+--
+
+INSERT INTO `consommation` (`id_consommation`, `index_consommation`, `id_type_flux`, `id_hebergement`, `date_consommation`) VALUES
+(197, 123.45, 4, 1, '2026-03-23 09:34:21'),
+(202, 124.45, 4, 7, '2026-03-23 10:11:16'),
+(206, 26883.6, 3, 2, '2026-03-23 10:15:38'),
+(208, 125.45, 4, 2, '2026-03-23 10:16:31'),
+(221, 26800, 4, 2, '2026-03-16 10:26:52'),
+(222, 26815.2, 4, 2, '2026-03-17 10:26:52'),
+(223, 26830.5, 4, 2, '2026-03-18 10:26:52'),
+(224, 26842.1, 4, 2, '2026-03-19 10:26:52'),
+(225, 26855, 4, 2, '2026-03-20 10:26:52'),
+(226, 26868.8, 4, 2, '2026-03-21 10:26:52'),
+(227, 26880, 4, 2, '2026-03-22 10:26:52'),
+(228, 26883.6, 4, 2, '2026-03-23 10:26:52'),
+(229, 100, 3, 2, '2026-03-16 10:26:52'),
+(230, 105.5, 3, 2, '2026-03-17 10:26:52'),
+(231, 112.2, 3, 2, '2026-03-18 10:26:52'),
+(232, 112.2, 3, 2, '2026-03-19 10:26:52'),
+(233, 118.4, 3, 2, '2026-03-20 10:26:52'),
+(234, 120, 3, 2, '2026-03-21 10:26:52'),
+(235, 125, 3, 2, '2026-03-22 10:26:52'),
+(236, 125.45, 3, 2, '2026-03-23 10:26:52'),
+(237, 224, 4, 10, '2026-03-23 15:18:58'),
+(238, 26883.6, 3, 2, '2026-03-23 15:19:29'),
+(239, 26883.6, 3, 2, '2026-03-23 15:19:29'),
+(240, 26883.6, 3, 10, '2026-03-23 15:26:18');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `hebergement`
+--
+
+CREATE TABLE `hebergement` (
+  `id_hebergement` bigint(20) NOT NULL,
+  `nom_hebergement` varchar(100) NOT NULL,
+  `id_type_logement` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Déchargement des données de la table `hebergement`
+--
+
+INSERT INTO `hebergement` (`id_hebergement`, `nom_hebergement`, `id_type_logement`) VALUES
+(1, 'Mobil-home  01', 1),
+(2, 'Mobil-home  02', 2),
+(7, 'Mobil-home  03', 3),
+(8, 'Mobil-home  04', 1),
+(9, 'Mobil-home  05', 2),
+(10, 'Mobil-home  06', 3);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `historique_cosommation`
+--
+
+CREATE TABLE `historique_cosommation` (
+  `id_historique_consommation` bigint(20) NOT NULL,
+  `date_mesure_historique` datetime DEFAULT NULL,
+  `eau_historique_consommation` float DEFAULT NULL,
+  `electricite_historique_consommation` float DEFAULT NULL,
+  `id_sejour` bigint(20) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Déchargement des données de la table `historique_cosommation`
+--
+
+INSERT INTO `historique_cosommation` (`id_historique_consommation`, `date_mesure_historique`, `eau_historique_consommation`, `electricite_historique_consommation`, `id_sejour`) VALUES
+(3, '2026-06-02 09:00:00', 5.2, 10.5, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `message`
+--
+
+CREATE TABLE `message` (
+  `id_message` bigint(20) NOT NULL,
+  `contenu_message` varchar(255) DEFAULT NULL,
+  `date_debut_message` date DEFAULT NULL,
+  `date_fin_message` date DEFAULT NULL,
+  `horaire_evenement_message` time DEFAULT NULL,
+  `id_type_message` bigint(20) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Déchargement des données de la table `message`
+--
+
+INSERT INTO `message` (`id_message`, `contenu_message`, `date_debut_message`, `date_fin_message`, `horaire_evenement_message`, `id_type_message`) VALUES
+(2, 'Pensez à éteindre les lumières en sortant !', '2026-06-01', '2026-08-31', NULL, 2);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `quota`
+--
+
+CREATE TABLE `quota` (
+  `id_quota` bigint(20) NOT NULL,
+  `eau_quota` float DEFAULT NULL,
+  `electicite_quota` float DEFAULT NULL,
+  `id_sejour` bigint(20) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Déchargement des données de la table `quota`
+--
+
+INSERT INTO `quota` (`id_quota`, `eau_quota`, `electicite_quota`, `id_sejour`) VALUES
+(2, 50.5, 120, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `sejour`
+--
+
+CREATE TABLE `sejour` (
+  `id_sejour` bigint(20) NOT NULL,
+  `date_debut_sejour` datetime DEFAULT NULL,
+  `date_fin_sejour` datetime DEFAULT NULL,
+  `id_hebergement` bigint(20) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Déchargement des données de la table `sejour`
+--
+
+INSERT INTO `sejour` (`id_sejour`, `date_debut_sejour`, `date_fin_sejour`, `id_hebergement`) VALUES
+(1, '2026-06-01 14:00:00', '2026-06-08 10:00:00', 1),
+(8, '2026-03-25 00:00:00', '2026-03-20 00:00:00', 1),
+(9, '2026-03-27 00:00:00', '2026-03-29 00:00:00', 8);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `tableau_de_bord`
+--
+
+CREATE TABLE `tableau_de_bord` (
+  `id_tableau` bigint(20) NOT NULL,
+  `reference_tableau` varchar(255) NOT NULL,
+  `id_hebergement` bigint(20) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `type_flux`
+--
+
+CREATE TABLE `type_flux` (
+  `id_type_flux` bigint(20) NOT NULL,
+  `nom_type_flux` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Déchargement des données de la table `type_flux`
+--
+
+INSERT INTO `type_flux` (`id_type_flux`, `nom_type_flux`) VALUES
+(4, 'Eau'),
+(3, 'Électricité');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `type_logement`
+--
+
+CREATE TABLE `type_logement` (
+  `id_type_logement` int(11) NOT NULL,
+  `nom_type` varchar(50) NOT NULL,
+  `quota_eau_max` float NOT NULL,
+  `quota_elec_max` float NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+--
+-- Déchargement des données de la table `type_logement`
+--
+
+INSERT INTO `type_logement` (`id_type_logement`, `nom_type`, `quota_eau_max`, `quota_elec_max`) VALUES
+(1, 'Standard (2-4 pers)', 25, 25),
+(2, 'Confort (6 pers)', 5959, 59),
+(3, 'Luxe (8 pers)', 800, 55555);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `type_message`
+--
+
+CREATE TABLE `type_message` (
+  `id_type_message` bigint(20) NOT NULL,
+  `nom_type_message` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Déchargement des données de la table `type_message`
+--
+
+INSERT INTO `type_message` (`id_type_message`, `nom_type_message`) VALUES
+(3, 'Alerte Consommation'),
+(1, 'Evenement'),
+(5, 'Événement Camping'),
+(4, 'Information Éco-geste'),
+(2, 'Messages');
+
+--
+-- Index pour les tables déchargées
+--
+
+--
+-- Index pour la table `administrateur`
+--
+ALTER TABLE `administrateur`
+  ADD PRIMARY KEY (`id_administrateur`),
+  ADD UNIQUE KEY `login_administrateur` (`login_administrateur`),
+  ADD UNIQUE KEY `mdp_administrateur` (`mdp_administrateur`);
+
+--
+-- Index pour la table `compteur`
+--
+ALTER TABLE `compteur`
+  ADD PRIMARY KEY (`id_compteur`),
+  ADD UNIQUE KEY `index_compteur` (`index_compteur`),
+  ADD UNIQUE KEY `reference_compteur` (`reference_compteur`),
+  ADD KEY `FK_Compteur_id_hebergement` (`id_hebergement`),
+  ADD KEY `FK_Compteur_id_type_flux` (`id_type_flux`);
+
+--
+-- Index pour la table `consommation`
+--
+ALTER TABLE `consommation`
+  ADD PRIMARY KEY (`id_consommation`),
+  ADD KEY `FK_Consommation_id_type_flux` (`id_type_flux`),
+  ADD KEY `FK_Consommation_id_hebergement` (`id_hebergement`);
+
+--
+-- Index pour la table `hebergement`
+--
+ALTER TABLE `hebergement`
+  ADD PRIMARY KEY (`id_hebergement`),
+  ADD UNIQUE KEY `nom_hebergement` (`nom_hebergement`),
+  ADD KEY `fk_type_logement` (`id_type_logement`);
+
+--
+-- Index pour la table `historique_cosommation`
+--
+ALTER TABLE `historique_cosommation`
+  ADD PRIMARY KEY (`id_historique_consommation`),
+  ADD UNIQUE KEY `date_mesure_historique` (`date_mesure_historique`),
+  ADD UNIQUE KEY `eau_historique_consommation` (`eau_historique_consommation`),
+  ADD UNIQUE KEY `electricite_historique_consommation` (`electricite_historique_consommation`),
+  ADD KEY `FK_Historique_cosommation_id_sejour` (`id_sejour`);
+
+--
+-- Index pour la table `message`
+--
+ALTER TABLE `message`
+  ADD PRIMARY KEY (`id_message`),
+  ADD UNIQUE KEY `date_debut_message` (`date_debut_message`),
+  ADD UNIQUE KEY `horaire_evenement_message` (`horaire_evenement_message`),
+  ADD UNIQUE KEY `date_fin_message` (`date_fin_message`),
+  ADD KEY `FK_Message_id_type_message` (`id_type_message`);
+
+--
+-- Index pour la table `quota`
+--
+ALTER TABLE `quota`
+  ADD PRIMARY KEY (`id_quota`),
+  ADD UNIQUE KEY `eau_quota` (`eau_quota`),
+  ADD UNIQUE KEY `electicite_quota` (`electicite_quota`),
+  ADD KEY `FK_Quota_id_sejour` (`id_sejour`);
+
+--
+-- Index pour la table `sejour`
+--
+ALTER TABLE `sejour`
+  ADD PRIMARY KEY (`id_sejour`),
+  ADD UNIQUE KEY `date_debut_sejour` (`date_debut_sejour`),
+  ADD UNIQUE KEY `date_fin_sejour` (`date_fin_sejour`),
+  ADD KEY `FK_Sejour_id_hebergement` (`id_hebergement`);
+
+--
+-- Index pour la table `tableau_de_bord`
+--
+ALTER TABLE `tableau_de_bord`
+  ADD PRIMARY KEY (`id_tableau`),
+  ADD UNIQUE KEY `reference_tableau` (`reference_tableau`),
+  ADD KEY `FK_Tableau_de_bord_id_hebergement` (`id_hebergement`);
+
+--
+-- Index pour la table `type_flux`
+--
+ALTER TABLE `type_flux`
+  ADD PRIMARY KEY (`id_type_flux`),
+  ADD UNIQUE KEY `nom_type_flux` (`nom_type_flux`);
+
+--
+-- Index pour la table `type_logement`
+--
+ALTER TABLE `type_logement`
+  ADD PRIMARY KEY (`id_type_logement`);
+
+--
+-- Index pour la table `type_message`
+--
+ALTER TABLE `type_message`
+  ADD PRIMARY KEY (`id_type_message`),
+  ADD UNIQUE KEY `nom_type_message` (`nom_type_message`);
+
+--
+-- AUTO_INCREMENT pour les tables déchargées
+--
+
+--
+-- AUTO_INCREMENT pour la table `administrateur`
+--
+ALTER TABLE `administrateur`
+  MODIFY `id_administrateur` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT pour la table `compteur`
+--
+ALTER TABLE `compteur`
+  MODIFY `id_compteur` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT pour la table `consommation`
+--
+ALTER TABLE `consommation`
+  MODIFY `id_consommation` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=241;
+
+--
+-- AUTO_INCREMENT pour la table `hebergement`
+--
+ALTER TABLE `hebergement`
+  MODIFY `id_hebergement` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT pour la table `historique_cosommation`
+--
+ALTER TABLE `historique_cosommation`
+  MODIFY `id_historique_consommation` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT pour la table `message`
+--
+ALTER TABLE `message`
+  MODIFY `id_message` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT pour la table `quota`
+--
+ALTER TABLE `quota`
+  MODIFY `id_quota` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT pour la table `sejour`
+--
+ALTER TABLE `sejour`
+  MODIFY `id_sejour` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT pour la table `tableau_de_bord`
+--
+ALTER TABLE `tableau_de_bord`
+  MODIFY `id_tableau` bigint(20) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT pour la table `type_flux`
+--
+ALTER TABLE `type_flux`
+  MODIFY `id_type_flux` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT pour la table `type_logement`
+--
+ALTER TABLE `type_logement`
+  MODIFY `id_type_logement` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT pour la table `type_message`
+--
+ALTER TABLE `type_message`
+  MODIFY `id_type_message` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- Contraintes pour les tables déchargées
+--
+
+--
+-- Contraintes pour la table `compteur`
+--
+ALTER TABLE `compteur`
+  ADD CONSTRAINT `FK_Compteur_id_hebergement` FOREIGN KEY (`id_hebergement`) REFERENCES `hebergement` (`id_hebergement`),
+  ADD CONSTRAINT `FK_Compteur_id_type_flux` FOREIGN KEY (`id_type_flux`) REFERENCES `type_flux` (`id_type_flux`);
+
+--
+-- Contraintes pour la table `consommation`
+--
+ALTER TABLE `consommation`
+  ADD CONSTRAINT `FK_Consommation_id_hebergement` FOREIGN KEY (`id_hebergement`) REFERENCES `hebergement` (`id_hebergement`),
+  ADD CONSTRAINT `FK_Consommation_id_type_flux` FOREIGN KEY (`id_type_flux`) REFERENCES `type_flux` (`id_type_flux`);
+
+--
+-- Contraintes pour la table `hebergement`
+--
+ALTER TABLE `hebergement`
+  ADD CONSTRAINT `fk_type_logement` FOREIGN KEY (`id_type_logement`) REFERENCES `type_logement` (`id_type_logement`);
+
+--
+-- Contraintes pour la table `historique_cosommation`
+--
+ALTER TABLE `historique_cosommation`
+  ADD CONSTRAINT `FK_Historique_cosommation_id_sejour` FOREIGN KEY (`id_sejour`) REFERENCES `sejour` (`id_sejour`);
+
+--
+-- Contraintes pour la table `message`
+--
+ALTER TABLE `message`
+  ADD CONSTRAINT `FK_Message_id_type_message` FOREIGN KEY (`id_type_message`) REFERENCES `type_message` (`id_type_message`);
+
+--
+-- Contraintes pour la table `quota`
+--
+ALTER TABLE `quota`
+  ADD CONSTRAINT `FK_Quota_id_sejour` FOREIGN KEY (`id_sejour`) REFERENCES `sejour` (`id_sejour`);
+
+--
+-- Contraintes pour la table `sejour`
+--
+ALTER TABLE `sejour`
+  ADD CONSTRAINT `FK_Sejour_id_hebergement` FOREIGN KEY (`id_hebergement`) REFERENCES `hebergement` (`id_hebergement`);
+
+--
+-- Contraintes pour la table `tableau_de_bord`
+--
+ALTER TABLE `tableau_de_bord`
+  ADD CONSTRAINT `FK_Tableau_de_bord_id_hebergement` FOREIGN KEY (`id_hebergement`) REFERENCES `hebergement` (`id_hebergement`);
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
