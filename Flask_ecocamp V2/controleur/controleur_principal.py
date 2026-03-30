@@ -1,10 +1,8 @@
-import logging
 from flask import render_template, request, jsonify, session, redirect, url_for, flash
 from modele.Client import Client
 
-logger = logging.getLogger(__name__)
 
-class ControleurPrincipal:
+class controleur_principal:
     def __init__(self, appli):
         """
         Initialise le contrôleur avec l'accès à MySQL.
@@ -17,10 +15,6 @@ class ControleurPrincipal:
     # --- AUTHENTIFICATION ---
     # ==========================================
 
-
-
-
-
     def afficher_login(self):
         """Affiche la page de connexion."""
         return render_template("login.html")
@@ -30,9 +24,7 @@ class ControleurPrincipal:
         return render_template("index.html")
 
     def traiter_login(self):
-        """
-        Reçoit les identifiants en JSON, vérifie en base et crée la session.
-        """
+        """Reçoit les identifiants en JSON, vérifie en base et crée la session."""
         try:
             data = request.json
             login = data["identifiant"]
@@ -44,13 +36,10 @@ class ControleurPrincipal:
             if res["valeur"] == 1:
                 session.permanent = True
                 session['client'] = login
-                logger.info("Connexion réussie pour : %s", login)
 
             return jsonify(res)
         except Exception as e:
-            logger.error("Erreur traiter_login : %s", e)
             return jsonify({"valeur": 0})
-        
 
     def test_before_request(self):
         """Redirige vers le login si l'utilisateur n'est pas connecté."""
@@ -62,9 +51,6 @@ class ControleurPrincipal:
         """Vide la session et redirige vers le login."""
         session.clear()
         return redirect(url_for('afficher_login'))
-    
-
-
 
     # ==========================================
     # --- QUOTAS ---
@@ -81,8 +67,7 @@ class ControleurPrincipal:
                 elec = float(request.form.get("quota_elec"))
                 client.modifier_quota_type(id_type, eau, elec)
                 flash("Quotas mis à jour avec succès !", "success")
-            except (ValueError, TypeError) as e:
-                logger.warning("Valeurs de quota invalides : %s", e)
+            except (ValueError, TypeError):
                 flash("Erreur dans les valeurs saisies.", "error")
             return redirect(url_for('quotas'))
 
@@ -112,7 +97,7 @@ class ControleurPrincipal:
         )
 
     # ==========================================
-    # --- SEJOURS ---
+    # --- SÉJOURS ---
     # ==========================================
 
     def afficher_sejours(self):
@@ -141,19 +126,17 @@ class ControleurPrincipal:
             client.ajouter_sejour(id_h, debut, fin)
             flash("Séjour enregistré avec succès !", "success")
         except Exception as e:
-            logger.error("Erreur enregistrement séjour : %s", e)
-            flash("Une erreur est survenue lors de l'enregistrement.", "error")
+            flash(f"Une erreur est survenue : {e}", "error")
 
         return redirect(url_for('sejours'))
 
     def supprimer_sejour(self, id_sejour):
-        """Supprime un séjour et ses dépendances."""
+        """Supprime un séjour (historique et quotas supprimés via CASCADE)."""
         client = Client(self.mysql)
         try:
             client.supprimer_sejour(id_sejour)
-            flash("Séjour supprimé définitivement.", "success")
+            flash("Séjour supprimé.", "success")
         except Exception as e:
-            logger.error("Erreur suppression séjour %s : %s", id_sejour, e)
             flash(f"Erreur lors de la suppression : {e}", "error")
         return redirect(url_for('sejours'))
 
@@ -169,7 +152,7 @@ class ControleurPrincipal:
         return render_template("messages.html", messages=messages, types_message=types_message)
 
     def enregistrer_message(self):
-        """Enregistre un nouveau message (général ou événement) en base."""
+        """Enregistre un nouveau message en base."""
         client = Client(self.mysql)
         try:
             contenu = request.form.get("contenu_message", "").strip()
@@ -185,8 +168,7 @@ class ControleurPrincipal:
             client.ajouter_message(contenu, date_debut, date_fin, horaire, id_type)
             flash("Message enregistré avec succès !", "success")
         except Exception as e:
-            logger.error("Erreur enregistrement message : %s", e)
-            flash("Une erreur est survenue.", "error")
+            flash(f"Une erreur est survenue : {e}", "error")
         return redirect(url_for('messages'))
 
     def supprimer_message(self, id_message):
@@ -196,16 +178,13 @@ class ControleurPrincipal:
             client.supprimer_message(id_message)
             flash("Message supprimé.", "success")
         except Exception as e:
-            logger.error("Erreur suppression message %s : %s", id_message, e)
-            flash("Erreur lors de la suppression.", "error")
+            flash(f"Erreur lors de la suppression : {e}", "error")
         return redirect(url_for('messages'))
-    
 
+    # ==========================================
+    # --- ERREURS ---
+    # ==========================================
 
-
-
-
-    
-    def page_not_found(e):
-    # On renvoie le template 404 et le code d'erreur 404
+    def page_not_found(self, e):
+        """Affiche la page d'erreur 404."""
         return render_template('404.html'), 404

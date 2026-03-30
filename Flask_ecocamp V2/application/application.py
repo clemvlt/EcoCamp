@@ -1,13 +1,10 @@
-import logging
+
 from flask import Flask
-from controleur import ControleurPrincipal
+from controleur.controleur_principal import controleur_principal
 from flask_mysqldb import MySQL
 from datetime import timedelta
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(name)s : %(message)s'
-)
+
 
 class Application:
     """
@@ -32,13 +29,14 @@ class Application:
         self.mysql = MySQL()
         self.mysql.init_app(self.app)
 
-        self.cp = ControleurPrincipal(self)
+        self.cp = controleur_principal(self)
         self.__routage()
 
     def __routage(self):
         """Enregistrement de toutes les routes de l'application."""
         self.app.before_request(self.cp.test_before_request)
         #Erreur 404
+        self.app.register_error_handler(404, self.cp.page_not_found)
         
         # Authentification
         self.app.add_url_rule("/", view_func=self.cp.afficher_login, methods=["GET"])
