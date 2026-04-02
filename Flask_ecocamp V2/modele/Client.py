@@ -1,10 +1,12 @@
 from utils.hashsel import HashSel
 from datetime import datetime, timedelta
+import json
 
 
 class Client:
-    def __init__(self, mysql):
+    def __init__(self, mysql, mqtt_client=None):
         self.mysql = mysql
+        self.mqtt_client = mqtt_client
 
 
     # ==========================================
@@ -14,7 +16,6 @@ class Client:
     def test_login(self, login, mdp_saisi):
         """Vérifie si le login et le mot de passe sont corrects."""
         cursor = self.mysql.connection.cursor()
-
         cursor.execute(
             "SELECT mdp_administrateur FROM administrateur WHERE login_administrateur = %s",
             (login,)
@@ -34,7 +35,6 @@ class Client:
     def get_sejours(self):
         """Retourne tous les séjours avec le nom du logement, du plus récent au plus ancien."""
         cursor = self.mysql.connection.cursor()
-
         cursor.execute("""
             SELECT s.id_sejour,
                    s.date_debut_sejour,
@@ -44,7 +44,6 @@ class Client:
             JOIN hebergement h ON s.id_hebergement = h.id_hebergement
             ORDER BY s.date_debut_sejour DESC
         """)
-
         res = cursor.fetchall()
         cursor.close()
         return res
@@ -52,18 +51,15 @@ class Client:
     def logement_est_disponible(self, id_h, debut, fin):
         """Retourne True si le logement est libre sur la période demandée."""
         cursor = self.mysql.connection.cursor()
-
         cursor.execute("""
             SELECT COUNT(*) AS nb_conflits
             FROM sejour
-            WHERE id_hebergement    = %s
-              AND date_debut_sejour  < %s
-              AND date_fin_sejour    > %s
+            WHERE id_hebergement   = %s
+              AND date_debut_sejour < %s
+              AND date_fin_sejour   > %s
         """, (id_h, fin, debut))
-
         res = cursor.fetchone()
         cursor.close()
-
         nb_conflits = res["nb_conflits"] if isinstance(res, dict) else res[0]
         return nb_conflits == 0
 
@@ -100,7 +96,6 @@ class Client:
             """, (id_sejour, index_eau, index_elec, debut))
 
             self.mysql.connection.commit()
-
         except Exception as e:
             self.mysql.connection.rollback()
             raise e
@@ -160,10 +155,28 @@ class Client:
     # --- CONSOMMATIONS ---
     # ==========================================
 
+    # Sous-requête réutilisable : 1 seul historique (le premier) par séjour
+    # → évite la duplication de lignes quand historique_consommation
+    #   contient plusieurs entrées pour le même séjour
+    _HISTO_SUBQUERY = """
+        LEFT JOIN (
+            SELECT id_sejour,
+                   eau_historique_consommation,
+                   electricite_historique_consommation
+            FROM historique_consommation h1
+            WHERE id_historique_consommation = (
+                SELECT MIN(id_historique_consommation)
+                FROM historique_consommation h2
+                WHERE h2.id_sejour = h1.id_sejour
+            )
+        ) histo ON s.id_sejour = histo.id_sejour
+    """
+
     def get_consommations(self):
         """
-        Retourne les relevés de TOUS les logements sur les 7 derniers jours,
-        avec la consommation réelle calculée depuis le début du séjour.
+        Retourne les relevés de TOUS les logements sur les 7 derniers jours.
+        LEFT JOIN sur sejour/historique : les relevés hors séjour apparaissent
+        quand même (conso_reelle = NULL dans ce cas).
         """
         cursor = self.mysql.connection.cursor()
         date_limite = datetime.now() - timedelta(days=7)
@@ -175,22 +188,34 @@ class Client:
                    f.id_type_flux,
                    h.nom_hebergement,
                    CASE
-                       WHEN f.id_type_flux = 4 THEN (c.index_consommation - histo.eau_historique_consommation)
+                       WHEN f.id_type_flux = 4
+                       THEN (c.index_consommation - histo.eau_historique_consommation)
                        ELSE NULL
                    END AS conso_reelle_eau,
                    CASE
-                       WHEN f.id_type_flux = 3 THEN (c.index_consommation - histo.electricite_historique_consommation)
+                       WHEN f.id_type_flux = 3
+                       THEN (c.index_consommation - histo.electricite_historique_consommation)
                        ELSE NULL
                    END AS conso_reelle_elec,
                    t.quota_eau_max,
                    t.quota_elec_max
             FROM consommation c
-            JOIN type_flux f ON c.id_type_flux = f.id_type_flux
-            JOIN sejour s ON c.id_hebergement = s.id_hebergement
+            JOIN type_flux f     ON c.id_type_flux      = f.id_type_flux
+            JOIN hebergement h   ON c.id_hebergement     = h.id_hebergement
+            JOIN type_logement t ON h.id_type_logement   = t.id_type_logement
+            LEFT JOIN sejour s   ON c.id_hebergement     = s.id_hebergement
                 AND c.date_consommation BETWEEN s.date_debut_sejour AND s.date_fin_sejour
-            JOIN historique_consommation histo ON s.id_sejour = histo.id_sejour
-            JOIN hebergement h ON c.id_hebergement = h.id_hebergement
-            JOIN type_logement t ON h.id_type_logement = t.id_type_logement
+            LEFT JOIN (
+                SELECT id_sejour,
+                       eau_historique_consommation,
+                       electricite_historique_consommation
+                FROM historique_consommation h1
+                WHERE id_historique_consommation = (
+                    SELECT MIN(id_historique_consommation)
+                    FROM historique_consommation h2
+                    WHERE h2.id_sejour = h1.id_sejour
+                )
+            ) histo ON s.id_sejour = histo.id_sejour
             WHERE c.date_consommation >= %s
             ORDER BY c.date_consommation DESC
         """, (date_limite,))
@@ -201,8 +226,9 @@ class Client:
 
     def get_consommations_par_hebergement(self, id_hebergement):
         """
-        Retourne les relevés d'un logement sur les 7 derniers jours
-        avec la consommation réelle calculée depuis le début du séjour.
+        Retourne les relevés d'un logement sur les 7 derniers jours.
+        LEFT JOIN sur sejour/historique : les relevés hors séjour apparaissent
+        quand même (conso_reelle = NULL dans ce cas).
         """
         cursor = self.mysql.connection.cursor()
         date_limite = datetime.now() - timedelta(days=7)
@@ -214,22 +240,34 @@ class Client:
                    f.id_type_flux,
                    h.nom_hebergement,
                    CASE
-                       WHEN f.id_type_flux = 4 THEN (c.index_consommation - histo.eau_historique_consommation)
+                       WHEN f.id_type_flux = 4
+                       THEN (c.index_consommation - histo.eau_historique_consommation)
                        ELSE NULL
                    END AS conso_reelle_eau,
                    CASE
-                       WHEN f.id_type_flux = 3 THEN (c.index_consommation - histo.electricite_historique_consommation)
+                       WHEN f.id_type_flux = 3
+                       THEN (c.index_consommation - histo.electricite_historique_consommation)
                        ELSE NULL
                    END AS conso_reelle_elec,
                    t.quota_eau_max,
                    t.quota_elec_max
             FROM consommation c
-            JOIN type_flux f ON c.id_type_flux = f.id_type_flux
-            JOIN sejour s ON c.id_hebergement = s.id_hebergement
+            JOIN type_flux f     ON c.id_type_flux      = f.id_type_flux
+            JOIN hebergement h   ON c.id_hebergement     = h.id_hebergement
+            JOIN type_logement t ON h.id_type_logement   = t.id_type_logement
+            LEFT JOIN sejour s   ON c.id_hebergement     = s.id_hebergement
                 AND c.date_consommation BETWEEN s.date_debut_sejour AND s.date_fin_sejour
-            JOIN historique_consommation histo ON s.id_sejour = histo.id_sejour
-            JOIN hebergement h ON c.id_hebergement = h.id_hebergement
-            JOIN type_logement t ON h.id_type_logement = t.id_type_logement
+            LEFT JOIN (
+                SELECT id_sejour,
+                       eau_historique_consommation,
+                       electricite_historique_consommation
+                FROM historique_consommation h1
+                WHERE id_historique_consommation = (
+                    SELECT MIN(id_historique_consommation)
+                    FROM historique_consommation h2
+                    WHERE h2.id_sejour = h1.id_sejour
+                )
+            ) histo ON s.id_sejour = histo.id_sejour
             WHERE c.id_hebergement = %s
               AND c.date_consommation >= %s
             ORDER BY c.date_consommation DESC
@@ -247,7 +285,6 @@ class Client:
     def get_messages(self):
         """Retourne tous les messages avec leur type, du plus récent au plus ancien."""
         cursor = self.mysql.connection.cursor()
-
         cursor.execute("""
             SELECT m.id_message,
                    m.contenu_message,
@@ -259,7 +296,6 @@ class Client:
             JOIN type_message tm ON m.id_type_message = tm.id_type_message
             ORDER BY m.date_debut_message DESC
         """)
-
         res = cursor.fetchall()
         cursor.close()
         return res
@@ -298,5 +334,40 @@ class Client:
         except Exception as e:
             self.mysql.connection.rollback()
             raise e
+        finally:
+            cursor.close()
+
+
+    # ==========================================
+    # --- MQTT ---
+    # ==========================================
+
+    def envoyer_conso_mqtt(self, id_h, id_flux, index):
+        """
+        Récupère la MAC et publie la conso avec rétention.
+        """
+        cursor = self.mysql.connection.cursor()
+        try:
+            cursor.execute(
+                "SELECT adresse_mac, nom_hebergement FROM hebergement WHERE id_hebergement = %s",
+                (id_h,)
+            )
+            row = cursor.fetchone()
+
+            if row and row['adresse_mac']:
+                mac = row['adresse_mac']
+                nom = row['nom_hebergement']
+
+                payload = {
+                    "nom":   nom,
+                    "type":  "Eau" if id_flux == 4 else "Elec",
+                    "valeur": index,
+                    "unite": "m3" if id_flux == 4 else "kWh",
+                    "maj":   datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+                }
+
+                if self.mqtt_client:
+                    topic = f"ecocamp/{mac}/conso"
+                    self.mqtt_client.publish(topic, json.dumps(payload), retain=True)
         finally:
             cursor.close()
