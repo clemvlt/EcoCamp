@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consommations - EcoCamp</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+  
+    </style>
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <div class="conso-page">
+
+        <!-- TITRE -->
+        <h1 class="conso-title">Suivi des Consommations</h1>
+        <p class="conso-subtitle">7 derniers jours</p>
+
+        <!-- FILTRE -->
+        <div class="filter-bar">
+            <label>Sélectionner un logement :</label>
+            <form action="/consommations" method="GET">
+                <select name="id_hebergement" onchange="this.form.submit()">
+                    <option value="">Tous les logements</option>
+                    {% for h in hebergements %}
+                    <option value="{{ h.id_hebergement }}"
+                        {% if id_selectionne == h.id_hebergement|string %}selected{% endif %}>
+                        {{ h.nom_hebergement }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+
+        <!-- KPI -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-icon eau">💧</div>
+                <div>
+                    <p class="kpi-label">Dernier relevé Eau</p>
+                    <p class="kpi-value" id="valeurEau">— L</p>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon elec">⚡</div>
+                <div>
+                    <p class="kpi-label">Dernier relevé Électricité</p>
+                    <p class="kpi-value" id="valeurElec">— kWh</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- GRAPHIQUE (dark) -->
+        <div class="chart-panel">
+            <div class="chart-panel-header">
+                <h2 class="chart-panel-title">Évolution des consommations</h2>
+                <span class="period-badge">7 jours</span>
+            </div>
+            {% if consommations %}
+                <canvas id="consoChart" style="max-height:320px;"></canvas>
+            {% else %}
+                <div class="chart-empty">
+                    <div class="chart-empty-icon">📊</div>
+                    <p class="chart-empty-text">Aucune consommation enregistrée sur les 7 derniers jours.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- TABLEAU (light) -->
+        <div class="table-panel">
+            <div class="table-panel-header">
+                <h2 class="table-panel-title">
+                    Historique des relevés
+                    <span class="table-panel-sub">
+                        {% if id_selectionne %}Logement #{{ id_selectionne }}{% else %}Tous les logements{% endif %}
+                    </span>
+                </h2>
+            </div>
+            <table class="conso-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        {% if not id_selectionne %}<th>Logement</th>{% endif %}
+                        <th>Flux</th>
+                        <th>Index</th>
+                        <th>Conso réelle</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in consommations %}
+                    <tr>
+                        <td class="td-date">{{ c.date_consommation.strftime('%d/%m/%Y %H:%M') if c.date_consommation else 'N/A' }}</td>
+                        {% if not id_selectionne %}<td>{{ c.nom_hebergement }}</td>{% endif %}
+                        <td>
+                            {% if c.id_type_flux == 4 %}
+                                <span class="flux-pill eau">💧 Eau</span>
+                            {% else %}
+                                <span class="flux-pill elec">⚡ Élec</span>
+                            {% endif %}
+                        </td>
+                        <td class="td-index">{{ c.index_consommation }}</td>
+                        <td class="td-conso">
+                            {% if c.id_type_flux == 4 and c.conso_reelle_eau is not none %}
+                                {{ "%.2f"|format(c.conso_reelle_eau) }} L
+                            {% elif c.id_type_flux == 3 and c.conso_reelle_elec is not none %}
+                                {{ "%.2f"|format(c.conso_reelle_elec) }} kWh
+                            {% else %}
+                                <span style="color:#cbd5e1;">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if c.id_type_flux == 4 %}{% set conso=c.conso_reelle_eau %}{% set seuil=c.quota_eau_max %}
+                            {% else %}{% set conso=c.conso_reelle_elec %}{% set seuil=c.quota_elec_max %}{% endif %}
+                            {% if conso is not none and conso > seuil %}
+                                <span class="badge-status alert"><span class="s-dot"></span>Alerte</span>
+                            {% else %}
+                                <span class="badge-status ok"><span class="s-dot"></span>Normal</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not consommations %}
+                    <tr class="empty-row">
+                        <td colspan="{% if id_selectionne %}5{% else %}6{% endif %}">Aucune donnée sur les 7 derniers jours.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <!-- Données JS -->
+    <script>
+    const rawData = [
+        {% for c in consommations %}
+        {
+            id_type_flux: {{ c.id_type_flux }},
+            valeur: {% if c.id_type_flux == 4 %}{% if c.conso_reelle_eau is not none %}{{ c.conso_reelle_eau }}{% else %}0{% endif %}{% else %}{% if c.conso_reelle_elec is not none %}{{ c.conso_reelle_elec }}{% else %}0{% endif %}{% endif %},
+            label: "{{ c.date_consommation.strftime('%d/%m %H:%M') if c.date_consommation else 'N/A' }}{% if not id_selectionne %} ({{ c.nom_hebergement }}){% endif %}"
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+    </script>
+    <script src="{{ url_for('static', filename='js/consommations.js') }}"></script>
+
+   
+</body>
+</html>

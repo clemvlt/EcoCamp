@@ -1,0 +1,49 @@
+services:
+  db:
+    image: mariadb:latest
+    container_name: ecocamp_mariadb
+    restart: always
+    networks:
+      - reseau_ecocamp
+    ports:
+      - "3306:3306"
+    environment:
+      MARIADB_ROOT_PASSWORD: ecocamp2026
+      MARIADB_DATABASE: ecocamp
+      MARIADB_USER: ecocamp
+      MARIADB_PASSWORD: U3TPwTGusZ3x2NjA
+    volumes:
+      - ecocamp_db:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: ecocamp_phpmyadmin
+    restart: always
+    depends_on:
+      - db
+    networks:
+      - reseau_ecocamp
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: ecocamp_mariadb
+      MYSQL_ROOT_PASSWORD: ecocamp2026
+
+  flask:
+    build: ./Flask_ecocamp_V2
+    container_name: ecocamp_flask
+    restart: always
+    depends_on:
+      - db
+    networks:
+      - reseau_ecocamp
+    ports:
+      - "5000:8000"
+
+networks:
+  reseau_ecocamp:
+    driver: bridge
+
+volumes:
+  ecocamp_db:
+    external: true
