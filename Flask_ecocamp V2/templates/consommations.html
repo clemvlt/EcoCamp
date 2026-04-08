@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consommations - EcoCamp</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/consommations.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-  
+      
     </style>
 </head>
 <body>
@@ -18,16 +19,14 @@
 
     <div class="conso-page">
 
-        <!-- TITRE -->
         <h1 class="conso-title">Suivi des Consommations</h1>
-        <p class="conso-subtitle">7 derniers jours</p>
+        <p class="conso-subtitle">7 derniers jours — {{ hebergements | selectattr('id_hebergement', 'equalto', id_selectionne|int) | map(attribute='nom_hebergement') | first | default('') }}</p>
 
-        <!-- FILTRE -->
+        <!-- FILTRE — pas d'option "Tous les logements" -->
         <div class="filter-bar">
-            <label>Sélectionner un logement :</label>
+            <label>Logement :</label>
             <form action="/consommations" method="GET">
                 <select name="id_hebergement" onchange="this.form.submit()">
-                    <option value="">Tous les logements</option>
                     {% for h in hebergements %}
                     <option value="{{ h.id_hebergement }}"
                         {% if id_selectionne == h.id_hebergement|string %}selected{% endif %}>
@@ -56,37 +55,55 @@
             </div>
         </div>
 
-        <!-- GRAPHIQUE (dark) -->
-        <div class="chart-panel">
-            <div class="chart-panel-header">
-                <h2 class="chart-panel-title">Évolution des consommations</h2>
-                <span class="period-badge">7 jours</span>
-            </div>
-            {% if consommations %}
-                <canvas id="consoChart" style="max-height:320px;"></canvas>
-            {% else %}
-                <div class="chart-empty">
-                    <div class="chart-empty-icon">📊</div>
-                    <p class="chart-empty-text">Aucune consommation enregistrée sur les 7 derniers jours.</p>
+        <!-- DEUX GRAPHIQUES côte à côte -->
+        <div class="charts-grid">
+
+            <!-- Graphique Eau -->
+            <div class="chart-panel">
+                <div class="chart-panel-header">
+                    <h2 class="chart-panel-title">💧 Consommation Eau</h2>
+                    <span class="period-badge eau">7 jours</span>
                 </div>
-            {% endif %}
+                {% if consommations %}
+                    <canvas id="chartEau" style="max-height:280px;"></canvas>
+                {% else %}
+                    <div class="chart-empty">
+                        <div class="chart-empty-icon">💧</div>
+                        <p class="chart-empty-text">Aucune donnée eau.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Graphique Électricité -->
+            <div class="chart-panel">
+                <div class="chart-panel-header">
+                    <h2 class="chart-panel-title">⚡ Consommation Électricité</h2>
+                    <span class="period-badge elec">7 jours</span>
+                </div>
+                {% if consommations %}
+                    <canvas id="chartElec" style="max-height:280px;"></canvas>
+                {% else %}
+                    <div class="chart-empty">
+                        <div class="chart-empty-icon">⚡</div>
+                        <p class="chart-empty-text">Aucune donnée électricité.</p>
+                    </div>
+                {% endif %}
+            </div>
+
         </div>
 
-        <!-- TABLEAU (light) -->
+        <!-- TABLEAU -->
         <div class="table-panel">
             <div class="table-panel-header">
                 <h2 class="table-panel-title">
                     Historique des relevés
-                    <span class="table-panel-sub">
-                        {% if id_selectionne %}Logement #{{ id_selectionne }}{% else %}Tous les logements{% endif %}
-                    </span>
+                    <span class="table-panel-sub">Logement #{{ id_selectionne }}</span>
                 </h2>
             </div>
             <table class="conso-table">
                 <thead>
                     <tr>
                         <th>Date</th>
-                        {% if not id_selectionne %}<th>Logement</th>{% endif %}
                         <th>Flux</th>
                         <th>Index</th>
                         <th>Conso réelle</th>
@@ -97,7 +114,6 @@
                     {% for c in consommations %}
                     <tr>
                         <td class="td-date">{{ c.date_consommation.strftime('%d/%m/%Y %H:%M') if c.date_consommation else 'N/A' }}</td>
-                        {% if not id_selectionne %}<td>{{ c.nom_hebergement }}</td>{% endif %}
                         <td>
                             {% if c.id_type_flux == 4 %}
                                 <span class="flux-pill eau">💧 Eau</span>
@@ -128,7 +144,7 @@
                     {% endfor %}
                     {% if not consommations %}
                     <tr class="empty-row">
-                        <td colspan="{% if id_selectionne %}5{% else %}6{% endif %}">Aucune donnée sur les 7 derniers jours.</td>
+                        <td colspan="5">Aucune donnée sur les 7 derniers jours.</td>
                     </tr>
                     {% endif %}
                 </tbody>
@@ -144,13 +160,11 @@
         {
             id_type_flux: {{ c.id_type_flux }},
             valeur: {% if c.id_type_flux == 4 %}{% if c.conso_reelle_eau is not none %}{{ c.conso_reelle_eau }}{% else %}0{% endif %}{% else %}{% if c.conso_reelle_elec is not none %}{{ c.conso_reelle_elec }}{% else %}0{% endif %}{% endif %},
-            label: "{{ c.date_consommation.strftime('%d/%m %H:%M') if c.date_consommation else 'N/A' }}{% if not id_selectionne %} ({{ c.nom_hebergement }}){% endif %}"
+            label: "{{ c.date_consommation.strftime('%d/%m %H:%M') if c.date_consommation else 'N/A' }}"
         }{% if not loop.last %},{% endif %}
         {% endfor %}
     ];
     </script>
     <script src="{{ url_for('static', filename='js/consommations.js') }}"></script>
-
-   
 </body>
 </html>

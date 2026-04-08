@@ -1,77 +1,127 @@
 document.addEventListener('DOMContentLoaded', function () {
     if (typeof rawData === 'undefined' || rawData.length === 0) return;
 
-    // Les données arrivent du plus récent au plus ancien (ORDER BY DESC côté SQL)
-    // On les inverse pour avoir l'ordre chronologique dans le graphique
-    const datasetEau  = rawData.filter(d => d.id_type_flux === 4).reverse();
-    const datasetElec = rawData.filter(d => d.id_type_flux === 3).reverse();
+    const joursSemaine = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
 
-    // Mise à jour des cartes récapitulatives (dernier relevé = dernier élément après reverse)
-    if (datasetEau.length > 0) {
-        const dernierEau = datasetEau[datasetEau.length - 1].valeur;
-        document.getElementById('valeurEau').textContent =
-            (dernierEau !== null && dernierEau !== undefined ? dernierEau.toFixed(2) : '--') + " L";
-    }
-    if (datasetElec.length > 0) {
-        const dernierElec = datasetElec[datasetElec.length - 1].valeur;
-        document.getElementById('valeurElec').textContent =
-            (dernierElec !== null && dernierElec !== undefined ? dernierElec.toFixed(2) : '--') + " kWh";
+    // Helper : transforme "DD/MM HH:mm" en label lisible avec le jour
+    function buildLabel(labelStr) {
+        const parties = labelStr.split(' ');
+        const dateParts = parties[0].split('/');
+        const dateObj = new Date(2026, parseInt(dateParts[1]) - 1, parseInt(dateParts[0]));
+        return joursSemaine[dateObj.getDay()] + ' ' + parties[0];
     }
 
-    // Étiquettes de l'axe X — on prend le dataset le plus fourni comme référence
-    const sourceLabels = datasetElec.length >= datasetEau.length ? datasetElec : datasetEau;
-    const labels = sourceLabels.map(d => d.label.split(' (')[0]);
+    // ── Filtrage par type, ordre chronologique (les données arrivent DESC) ──
+    const dataEau  = rawData.filter(d => d.id_type_flux === 4).reverse();
+    const dataElec = rawData.filter(d => d.id_type_flux === 3).reverse();
 
-    const canvas = document.getElementById('consoChart');
-    if (!canvas) return;
+    // ── Mise à jour des KPI cards ──
+    if (dataEau.length > 0) {
+        const v = dataEau[dataEau.length - 1].valeur;
+        document.getElementById('valeurEau').textContent = (v || 0).toFixed(2) + ' L';
+    }
+    if (dataElec.length > 0) {
+        const v = dataElec[dataElec.length - 1].valeur;
+        document.getElementById('valeurElec').textContent = (v || 0).toFixed(2) + ' kWh';
+    }
 
-    const ctx = canvas.getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Consommation Eau (L)',
-                    data: datasetEau.map(d => d.valeur),
-                    backgroundColor: 'rgba(0, 90, 150, 0.7)',
-                    borderColor: 'rgba(0, 90, 150, 1)',
+    // ── Thème commun sombre ──
+    const darkGrid  = 'rgba(255,255,255,.06)';
+    const tickColor = '#64748b';
+    const legendColor = '#94a3b8';
+
+    // ══════════════════════════════════════════
+    // GRAPHIQUE EAU
+    // ══════════════════════════════════════════
+    const canvasEau = document.getElementById('chartEau');
+    if (canvasEau && dataEau.length > 0) {
+        new Chart(canvasEau.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: dataEau.map(d => buildLabel(d.label)),
+                datasets: [{
+                    label: 'Eau (L)',
+                    data: dataEau.map(d => d.valeur),
+                    backgroundColor: '#0b59a2',
+                    borderColor:     '#0b59a2',
                     borderWidth: 1,
-                    yAxisID: 'yEau'
-                },
-                {
-                    label: 'Consommation Électricité (kWh)',
-                    data: datasetElec.map(d => d.valeur),
-                    backgroundColor: 'rgba(251, 192, 45, 0.7)',
-                    borderColor: 'rgba(251, 192, 45, 1)',
-                    borderWidth: 1,
-                    yAxisID: 'yElec'
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'top' },
-                title: {
-                    display: true,
-                    text: 'Consommations sur les 7 derniers jours'
-                }
+                    borderRadius: 4
+                }]
             },
-            scales: {
-                yEau: {
-                    position: 'left',
-                    title: { display: true, text: 'Eau (L)' },
-                    beginAtZero: true
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: legendColor } },
+                    title:  { display: false }
                 },
-                yElec: {
-                    position: 'right',
-                    title: { display: true, text: 'Élec (kWh)' },
-                    beginAtZero: true,
-                    grid: { drawOnChartArea: false }
+                scales: {
+                    x: {
+                        ticks: { color: tickColor },
+                        grid:  { color: darkGrid }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: tickColor },
+                        grid:  { color: darkGrid },
+                        title: { display: true, text: 'Litres (L)', color: tickColor }
+                    }
                 }
             }
-        }
-    });
+        });
+    } else if (canvasEau && dataEau.length === 0) {
+        // Affiche un message vide dans le canvas
+        const ctx = canvasEau.getContext('2d');
+        ctx.fillStyle = '#4b5563';
+        ctx.font = '14px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Aucune donnée eau sur 7 jours', canvasEau.width / 2, canvasEau.height / 2);
+    }
+
+    // ══════════════════════════════════════════
+    // GRAPHIQUE ÉLECTRICITÉ
+    // ══════════════════════════════════════════
+    const canvasElec = document.getElementById('chartElec');
+    if (canvasElec && dataElec.length > 0) {
+        new Chart(canvasElec.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: dataElec.map(d => buildLabel(d.label)),
+                datasets: [{
+                    label: 'Électricité (kWh)',
+                    data: dataElec.map(d => d.valeur),
+                    backgroundColor: 'rgba(251,191,36,0.75)',
+                    borderColor:     'rgba(251,191,36,1)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: legendColor } },
+                    title:  { display: false }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: tickColor },
+                        grid:  { color: darkGrid }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: tickColor },
+                        grid:  { color: darkGrid },
+                        title: { display: true, text: 'kWh', color: tickColor }
+                    }
+                }
+            }
+        });
+    } else if (canvasElec && dataElec.length === 0) {
+        const ctx = canvasElec.getContext('2d');
+        ctx.fillStyle = '#4b5563';
+        ctx.font = '14px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Aucune donnée électricité sur 7 jours', canvasElec.width / 2, canvasElec.height / 2);
+    }
 });

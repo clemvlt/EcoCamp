@@ -16,7 +16,7 @@
     <main class="page-section">
         <div class="welcome-header">
             <h1>Gestion des Quotas</h1>
-            <p>Définissez les limites de consommation par catégorie de logement</p>
+            <p>Définissez les limites de consommation par catégorie de logement pour une journée</p>
         </div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -34,12 +34,10 @@
         <div class="card-panel">
             <div class="panel-header">
                 <h2>Modifier une catégorie</h2>
-                <p class="text-muted">Sélectionnez un type pour mettre à jour ses limites</p>
             </div>
 
             <form action="{{ url_for('quotas') }}" method="POST">
                 <div class="input-field">
-                    <label>Catégorie de logement</label>
                     <select name="id_type_logement" class="form-select" required>
                         {% for type in types_logement %}
                         <option value="{{ type.id_type_logement }}">{{ type.nom_type }}</option>
@@ -65,7 +63,6 @@
         <div class="card-panel">
             <div class="panel-header">
                 <h2>Récapitulatif actuel</h2>
-                <p class="text-muted">Limites enregistrées dans la base de données</p>
             </div>
 
             <table class="data-table">

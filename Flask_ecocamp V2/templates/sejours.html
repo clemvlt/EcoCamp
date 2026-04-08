@@ -7,31 +7,25 @@
     <title>Séjours - EcoCamp</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sejours.css') }}">
 </head>
 
 <body>
 
     {% include 'header.html' %}
 
-    <main class="page-section" style="padding: 20px; max-width: 1100px; margin: 0 auto;">
-        
+    <main class="page-section sejours-page">
+
         {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            <div id="flash-container">
-                {% for category, message in messages %}
-                  <div class="alert alert-{{ category }}" style="
-                    padding: 15px; 
-                    margin-bottom: 20px; 
-                    border-radius: 10px; 
-                    font-weight: 600; 
-                    text-align: center;
-                    border: 1px solid;
-                    ">
-                    {{ '⚠️ ' if category == 'error' else '✅ ' }}{{ message }}
-                  </div>
-                {% endfor %}
+        {% if messages %}
+        <div id="flash-container">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {{ '⚠️ ' if category == 'error' else '✅ ' }}{{ message }}
             </div>
-          {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
         {% endwith %}
 
         <div class="welcome-header">
@@ -39,14 +33,33 @@
             <p>Liste des réservations et occupations des logements</p>
         </div>
 
-        <div class="card-panel-table"
-            style="background: white; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: var(--shadow-sm);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3 style="margin: 0; font-weight: 700;">Réservations actuelles</h3>
-                <button onclick="ouvrirModale()" class="btn-small"
-                    style="background: var(--flower-blue); border:none; cursor:pointer;">
-                    + Nouveau séjour
-                </button>
+        <div class="card-panel-table">
+
+            <div class="sejours-actions-bar">
+                <h3>Réservations actuelles</h3>
+                <div class="sejours-actions-group">
+
+                    <div class="mqtt-btn-wrapper">
+                        <form action="/publier_logements" method="POST">
+                            <button type="submit" class="btn-small btn-mqtt">
+                                🔄 Mettre à jour les écrans
+                            </button>
+                        </form>
+                        <div class="mqtt-tooltip">
+                            <p>Que va-t-il se passer ?</p>
+                            <p>
+                                La liste des logements et leurs identifiants (MAC) sont envoyés aux écrans de chaque
+                                hébergement.
+                                À faire après toute modification de logement.
+                            </p>
+                        </div>
+                    </div>
+
+                    <button onclick="ouvrirModale()" class="btn-small btn-new-sejour">
+                        + Nouveau séjour
+                    </button>
+
+                </div>
             </div>
 
             <table class="data-table">
@@ -71,12 +84,13 @@
                         <td style="text-align: center;">
                             <button type="button" class="btn-delete"
                                 onclick="ouvrirModaleSuppr('{{ s.id_sejour }}', '{{ s.nom_hebergement }}')">
+                                🗑️
                             </button>
                         </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="6" style="text-align: center; padding: 30px; color: #94a3b8;">
+                        <td colspan="6" class="empty-table-cell">
                             Aucun séjour enregistré.
                         </td>
                     </tr>
@@ -86,38 +100,40 @@
         </div>
     </main>
 
+    <!-- Modale nouveau séjour -->
     <div id="fenetreSejour" class="modal">
-        <div class="modal-content" style="text-align: left;">
+        <div class="modal-content">
             <span class="close-btn" onclick="fermerModale()">&times;</span>
-            <h2 style="margin-top: 0;">Nouveau Séjour</h2>
+            <h2>Nouveau Séjour</h2>
             <form action="/enregistrer_sejour" method="POST">
-                <div class="input-field" style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Choisir l'hébergement</label>
-                    <select name="id_hebergement" class="form-select" style="width: 100%;" required>
+                <div class="input-field">
+                    <label>Choisir l'hébergement</label>
+                    <select name="id_hebergement" class="form-select" required>
                         {% for h in hebergements %}
                         <option value="{{ h.id_hebergement }}">{{ h.nom_hebergement }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="input-field" style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Date de début</label>
-                    <input type="date" name="date_debut" class="form-input" style="width: 100%;" required>
+                <div class="input-field">
+                    <label>Date de début</label>
+                    <input type="date" name="date_debut" class="form-input" required>
                 </div>
-                <div class="input-field" style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Date de fin</label>
-                    <input type="date" name="date_fin" class="form-input" style="width: 100%;" required>
+                <div class="input-field">
+                    <label>Date de fin</label>
+                    <input type="date" name="date_fin" class="form-input" required>
                 </div>
-                <button type="submit" class="btn-save" style="width: 100%; padding: 12px; margin-top: 10px;">Créer le séjour</button>
+                <button type="submit" class="btn-save">Créer le séjour</button>
             </form>
         </div>
     </div>
 
+    <!-- Modale confirmation suppression -->
     <div id="modalConfirmSuppr" class="modal">
         <div class="modal-content">
             <div style="font-size: 50px; margin-bottom: 10px;">🗑️</div>
-            <h2 style="margin: 0;">Supprimer ?</h2>
-            <p style="margin: 15px 0;">Voulez-vous vraiment supprimer le séjour pour :<br>
-                <strong id="nomHebergementSuppr" style="color: var(--flower-blue); font-size: 1.1rem;"></strong> ?
+            <h2>Supprimer ?</h2>
+            <p>Voulez-vous vraiment supprimer le séjour pour :<br>
+                <strong id="nomHebergementSuppr"></strong> ?
             </p>
             <div class="modal-footer">
                 <button onclick="fermerModaleSuppr()" class="btn-cancel">Annuler</button>
@@ -127,12 +143,10 @@
     </div>
 
     <script>
-        // Script pour faire disparaître les alertes après 5 secondes
         setTimeout(function() {
             let flash = document.getElementById('flash-container');
             if (flash) {
-                flash.style.transition = "opacity 0.5s ease";
-                flash.style.opacity = "0";
+                flash.classList.add('flash-fade-out');
                 setTimeout(() => flash.remove(), 500);
             }
         }, 5000);
@@ -140,4 +154,5 @@
     <script src="{{ url_for('static', filename='js/sejours.js') }}"></script>
     {% include 'footer.html' %}
 </body>
+
 </html>

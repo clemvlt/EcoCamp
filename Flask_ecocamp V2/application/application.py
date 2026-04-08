@@ -1,9 +1,7 @@
-
 from flask import Flask
 from controleur.controleur_principal import controleur_principal
 from flask_mysqldb import MySQL
 from datetime import timedelta
-
 
 
 class Application:
@@ -35,9 +33,10 @@ class Application:
     def __routage(self):
         """Enregistrement de toutes les routes de l'application."""
         self.app.before_request(self.cp.test_before_request)
-        #Erreur 404
+
+        # Erreur 404
         self.app.register_error_handler(404, self.cp.page_not_found)
-        
+
         # Authentification
         self.app.add_url_rule("/", view_func=self.cp.afficher_login, methods=["GET"])
         self.app.add_url_rule("/test_login", view_func=self.cp.traiter_login, methods=["POST"])
@@ -53,6 +52,9 @@ class Application:
         # Actions séjours
         self.app.add_url_rule("/enregistrer_sejour", view_func=self.cp.enregistrer_sejour, methods=["POST"])
         self.app.add_url_rule("/supprimer_sejour/<int:id_sejour>", view_func=self.cp.supprimer_sejour, methods=["GET"])
+
+        # Publication MQTT logements
+        self.app.add_url_rule("/publier_logements", endpoint="publier_logements", view_func=self.cp.publier_logements, methods=["POST"])
 
         # Actions messages
         self.app.add_url_rule("/enregistrer_message", view_func=self.cp.enregistrer_message, methods=["POST"])

@@ -1,13 +1,10 @@
 from flask import render_template, request, jsonify, session, redirect, url_for, flash
 from modele.Client import Client
+from utils.publisher_logements import LogementPublisher
 
 
 class controleur_principal:
     def __init__(self, appli):
-        """
-        Initialise le contrôleur avec l'accès à MySQL.
-        Définit les routes accessibles sans être connecté.
-        """
         self.mysql = appli.mysql
         self.routes_exceptions = ['afficher_login', 'static', 'traiter_login']
 
@@ -79,15 +76,20 @@ class controleur_principal:
     # ==========================================
 
     def afficher_consommations(self):
-        """Affiche les relevés avec filtrage optionnel par hébergement."""
+        """
+        Affiche les relevés filtrés par hébergement.
+        Si aucun logement n'est sélectionné, redirige automatiquement
+        vers le premier logement disponible.
+        """
         client = Client(self.mysql)
-        id_h = request.args.get('id_hebergement')
         hebergements = client.get_hebergements()
+        id_h = request.args.get('id_hebergement')
 
-        if id_h:
-            conso = client.get_consommations_par_hebergement(id_h)
-        else:
-            conso = client.get_consommations()
+        if not id_h and hebergements:
+            premier_id = hebergements[0]['id_hebergement'] if isinstance(hebergements[0], dict) else hebergements[0][0]
+            return redirect(url_for('consommations', id_hebergement=premier_id))
+
+        conso = client.get_consommations_par_hebergement(id_h) if id_h else []
 
         return render_template(
             "consommations.html",
@@ -138,6 +140,24 @@ class controleur_principal:
             flash("Séjour supprimé.", "success")
         except Exception as e:
             flash(f"Erreur lors de la suppression : {e}", "error")
+        return redirect(url_for('sejours'))
+
+    # ==========================================
+    # --- PUBLICATION MQTT LOGEMENTS ---
+    # ==========================================
+
+    def publier_logements(self):
+        """Déclenche la publication MQTT de la liste des logements avec leur MAC."""
+        try:
+            publisher = LogementPublisher()
+            logements = publisher.get_logements()
+            if not logements:
+                flash("Aucun logement trouvé en base.", "error")
+                return redirect(url_for('sejours'))
+            publisher.publier_par_logement(logements)
+            flash(f"{len(logements)} logement(s) publiés sur le broker MQTT.", "success")
+        except Exception as e:
+            flash(f"Erreur lors de la publication MQTT : {e}", "error")
         return redirect(url_for('sejours'))
 
     # ==========================================

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <script type="text/javascript" src="{{ url_for('static', filename='js/login.js') }}"></script>
 </head>
+
 <body class="login-page">
 
     <div class="login-container">
@@ -17,7 +19,7 @@
                 <span class="flower-icon">✿</span>
                 <div class="brand-text">flower <span>campings</span></div>
             </div>
-            
+
             <h1>EcoCamp</h1>
             <p class="text-muted">Administration Camping</p>
 
@@ -29,15 +31,16 @@
 
                 <div class="input-group password-group">
                     <i class="fa fa-lock"></i>
-                    <button type="button" class="toggle-password" id="togglePassword">
+                    <button type="button" id="togglePassword" class="toggle-password" tabindex="-1">
                         <i class="fa fa-eye" id="eyeIcon"></i>
                     </button>
-                    <input type="password" name="password" id="password" class="form-input" placeholder="Mot de passe" required>
+                    <input type="password" name="password" id="password" class="form-input" placeholder="Mot de passe"
+                        required>
                 </div>
 
                 <button type="button" id="formulaire_login" class="btn-login">Connexion</button>
             </form>
-            
+
             <p id="message_erreur" style="margin-top: 20px; font-size: 0.8rem; color: red;">
                 &nbsp;
             </p>
@@ -45,4 +48,5 @@
     </div>
 
 </body>
+
 </html>
