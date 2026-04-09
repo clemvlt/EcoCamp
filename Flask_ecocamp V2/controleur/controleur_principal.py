@@ -1,6 +1,7 @@
 from flask import render_template, request, jsonify, session, redirect, url_for, flash
 from modele.Client import Client
 from utils.publisher_logements import LogementPublisher
+from utils.publisher_donnees import DonneesPublisher
 
 
 class controleur_principal:
@@ -35,7 +36,7 @@ class controleur_principal:
                 session['client'] = login
 
             return jsonify(res)
-        except Exception as e:
+        except Exception:
             return jsonify({"valeur": 0})
 
     def test_before_request(self):
@@ -159,6 +160,33 @@ class controleur_principal:
         except Exception as e:
             flash(f"Erreur lors de la publication MQTT : {e}", "error")
         return redirect(url_for('sejours'))
+
+    # ==========================================
+    # --- PUBLICATION MQTT DONNÉES (historique 7j) ---
+    # ==========================================
+
+    def publier_donnees(self):
+        """
+        Déclenche la publication MQTT des données de consommation pour tous les
+        hébergements : index courant, diff et historique des 7 derniers jours.
+
+        Chaque hébergement reçoit son message retenu (retain=True) sur :
+            ecocamp/tableau_bord/{mac}/nom_hebergement/{nom}/donnees
+        """
+        try:
+            publisher = DonneesPublisher()
+            donnees = publisher.get_donnees()
+            if not donnees:
+                flash("Aucun hébergement avec adresse MAC trouvé.", "error")
+                return redirect(url_for('consommations'))
+            nb = publisher.publier_par_donnees(donnees)
+            flash(
+                f"{nb} hébergement(s) publiés avec leur historique 7 jours sur le broker MQTT.",
+                "success",
+            )
+        except Exception as e:
+            flash(f"Erreur lors de la publication MQTT des données : {e}", "error")
+        return redirect(url_for('consommations'))
 
     # ==========================================
     # --- MESSAGES ---
