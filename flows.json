@@ -1,0 +1,47 @@
+[
+    {
+        "id": "0731a9274acdffa8",
+        "type": "ui-table",
+        "z": "aecbf4deed2f97a0",
+        "d": true,
+        "group": "",
+        "name": "",
+        "label": "Informations",
+        "order": 4,
+        "width": "0",
+        "height": "0",
+        "maxrows": "0",
+        "passthru": false,
+        "autocols": false,
+        "showSearch": false,
+        "deselect": false,
+        "selectionType": "none",
+        "columns": [
+            {
+                "title": "",
+                "key": "text",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            }
+        ],
+        "mobileBreakpoint": "sm",
+        "mobileBreakpointType": "defaults",
+        "action": "replace",
+        "className": "",
+        "x": 350,
+        "y": 800,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "2bf5a8cf51140b2a",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "@flowfuse/node-red-dashboard": "1.30.2"
+        }
+    }
+]
