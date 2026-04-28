@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Séjours - EcoCamp</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sejours.css') }}">
+</head>
+
+<body>
+
+    {% include 'header.html' %}
+
+    <main class="page-section sejours-page">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div id="flash-container">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {{ '⚠️ ' if category == 'error' else '✅ ' }}{{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="welcome-header">
+            <h1>Gestion des Séjours</h1>
+            <p>Liste des réservations et occupations des logements</p>
+        </div>
+
+        <div class="card-panel-table">
+
+            <div class="sejours-actions-bar">
+                <h3>Réservations actuelles</h3>
+                <div class="sejours-actions-group">
+
+                    <div class="mqtt-btn-wrapper">
+                        <form action="/publier_logements" method="POST">
+                            <button type="submit" class="btn-small btn-mqtt">
+                                🔄 Mettre à jour les écrans
+                            </button>
+                        </form>
+                        <div class="mqtt-tooltip">
+                            <p>Que va-t-il se passer ?</p>
+                            <p>
+                                La liste des logements et leurs identifiants (MAC) sont envoyés aux écrans de chaque
+                                hébergement.
+                                À faire après toute modification de logement.
+                            </p>
+                        </div>
+                    </div>
+
+                    <button onclick="ouvrirModale()" class="btn-small btn-new-sejour">
+                        + Nouveau séjour
+                    </button>
+
+                </div>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Hébergement</th>
+                        <th>Date Début</th>
+                        <th>Date Fin</th>
+                        <th>Statut</th>
+                        <th style="text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in sejours %}
+                    <tr>
+                        <td>#{{ s.id_sejour }}</td>
+                        <td><strong>{{ s.nom_hebergement }}</strong></td>
+                        <td>{{ s.date_debut_sejour }}</td>
+                        <td>{{ s.date_fin_sejour }}</td>
+                        <td><span class="status-badge success">Confirmé</span></td>
+                        <td style="text-align: center;">
+                            <button type="button" class="btn-delete"
+                                onclick="ouvrirModaleSuppr('{{ s.id_sejour }}', '{{ s.nom_hebergement }}')">
+                                🗑️
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="empty-table-cell">
+                            Aucun séjour enregistré.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Modale nouveau séjour -->
+    <div id="fenetreSejour" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="fermerModale()">&times;</span>
+            <h2>Nouveau Séjour</h2>
+            <form action="/enregistrer_sejour" method="POST">
+                <div class="input-field">
+                    <label>Choisir l'hébergement</label>
+                    <select name="id_hebergement" class="form-select" required>
+                        {% for h in hebergements %}
+                        <option value="{{ h.id_hebergement }}">{{ h.nom_hebergement }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="input-field">
+                    <label>Date de début</label>
+                    <input type="date" name="date_debut" class="form-input" required>
+                </div>
+                <div class="input-field">
+                    <label>Date de fin</label>
+                    <input type="date" name="date_fin" class="form-input" required>
+                </div>
+                <button type="submit" class="btn-save">Créer le séjour</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modale confirmation suppression -->
+    <div id="modalConfirmSuppr" class="modal">
+        <div class="modal-content">
+            <div style="font-size: 50px; margin-bottom: 10px;">🗑️</div>
+            <h2>Supprimer ?</h2>
+            <p>Voulez-vous vraiment supprimer le séjour pour :<br>
+                <strong id="nomHebergementSuppr"></strong> ?
+            </p>
+            <div class="modal-footer">
+                <button onclick="fermerModaleSuppr()" class="btn-cancel">Annuler</button>
+                <a id="lienSupprimer" href="#" class="btn-confirm">Supprimer définitivement</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        setTimeout(function() {
+            let flash = document.getElementById('flash-container');
+            if (flash) {
+                flash.classList.add('flash-fade-out');
+                setTimeout(() => flash.remove(), 500);
+            }
+        }, 5000);
+    </script>
+    <script src="{{ url_for('static', filename='js/sejours.js') }}"></script>
+    {% include 'footer.html' %}
+</body>
+
+</html>
