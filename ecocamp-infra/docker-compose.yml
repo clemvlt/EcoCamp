@@ -1,12 +1,34 @@
 services:
+
+  traefik:
+    image: traefik:v2.11
+    container_name: ecocamp_traefik
+    restart: always
+    command:
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=traefik-public"
+      - "--entrypoints.web.address=:80"
+      - "--log.level=INFO"
+      - "--accesslog=true"
+    ports:
+      - "80:80"
+      - "8888:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - traefik-public
+
   db:
     image: mariadb:latest
     container_name: ecocamp_mariadb
     restart: always
     networks:
-      - reseau_ecocamp
+      - reseau_ecocamp*
     ports:
-      - "3306:3306"
+    	-"3306:3306"
     environment:
       MARIADB_ROOT_PASSWORD: ecocamp2026
       MARIADB_DATABASE: ecocamp
@@ -15,10 +37,27 @@ services:
     volumes:
       - ecocamp_db:/var/lib/mysql
 
+  flask:
+    build: ./Flask_ecocamp_V2
+    container_name: ecocamp_flask
+    restart: always
+    depends_on:
+      - db
+    networks:
+      - traefik-public
+      - reseau_ecocamp
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.flask.rule=HostRegexp(`{host:.+}`)"
+      - "traefik.http.routers.flask.entrypoints=web"
+      - "traefik.http.services.flask.loadbalancer.server.port=8000"
+
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
     container_name: ecocamp_phpmyadmin
-    restart: always
+    restart: "no"
+    profiles:
+      - tools
     depends_on:
       - db
     networks:
@@ -29,18 +68,9 @@ services:
       PMA_HOST: ecocamp_mariadb
       MYSQL_ROOT_PASSWORD: ecocamp2026
 
-  flask:
-    build: ./Flask_ecocamp_V2
-    container_name: ecocamp_flask
-    restart: always
-    depends_on:
-      - db
-    networks:
-      - reseau_ecocamp
-    ports:
-      - "5000:8000"
-
 networks:
+  traefik-public:
+    external: true
   reseau_ecocamp:
     driver: bridge
 
