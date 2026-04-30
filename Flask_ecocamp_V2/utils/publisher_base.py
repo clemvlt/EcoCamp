@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 class BasePublisher:
-    """Briques communes pour publier vers le broker MQTT puis Node-RED."""
+    """ Publier vers le broker MQTT puis Node-RED."""
 
     def __init__(self, mqtt_client_id, topic_template):
         self.config = self._load_config()

@@ -40,7 +40,6 @@ class LogementPublisher(BasePublisher):
             log_label="logement",
         )
 
-
 if __name__ == "__main__":
     pub = LogementPublisher()
     pub.publier_tout()

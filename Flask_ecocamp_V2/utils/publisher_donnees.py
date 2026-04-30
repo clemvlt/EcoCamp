@@ -193,17 +193,17 @@ class DonneesPublisher(BasePublisher):
                 ) seq
             ) jours
 
-            /* Relevés eau du jour exact (LEFT JOIN = jour conservé même sans relevé) */
-            LEFT JOIN consommation c_eau
-                ON  c_eau.id_hebergement    = %(id)s
-                AND c_eau.id_type_flux      = 4
-                AND c_eau.date_consommation = jours.jour
+                            /* Relevés eau du jour exact (LEFT JOIN = jour conservé même sans relevé) */
+                LEFT JOIN consommation c_eau
+                    ON  c_eau.id_hebergement    = %(id)s
+                    AND c_eau.id_type_flux      = 4
+                    AND DATE(c_eau.date_consommation) = jours.jour   -- ← DATE() ajouté
 
-            /* Relevés élec du jour exact */
-            LEFT JOIN consommation c_elec
-                ON  c_elec.id_hebergement    = %(id)s
-                AND c_elec.id_type_flux      = 3
-                AND c_elec.date_consommation = jours.jour
+                /* Relevés élec du jour exact */
+                LEFT JOIN consommation c_elec
+                    ON  c_elec.id_hebergement    = %(id)s
+                    AND c_elec.id_type_flux      = 3
+                    AND DATE(c_elec.date_consommation) = jours.jour  -- ← DATE() ajouté
 
             GROUP BY jours.jour
             ORDER BY jours.jour ASC
