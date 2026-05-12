@@ -21,10 +21,7 @@ services:
       - "--log.level=TRACE"
       - "--accesslog=true"
     environment:
-      - OVH_ENDPOINT=ovh-eu
-      - OVH_APPLICATION_KEY=209cc45eacc85e05
-      - OVH_APPLICATION_SECRET=75830c42e43febed458f64f60ae7394a
-      - OVH_CONSUMER_KEY=b22006ee909fac2826894d52b03686b9
+      -
     ports:
       - "80:80"
       - "443:443"
