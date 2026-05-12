@@ -1,7 +1,6 @@
 services:
-
   traefik:
-    image: traefik:v2.11
+    image: traefik:v3.6
     container_name: ecocamp_traefik
     restart: always
     command:
@@ -11,13 +10,28 @@ services:
       - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.network=traefik-public"
       - "--entrypoints.web.address=:80"
-      - "--log.level=INFO"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=ovh"
+      #- "--certificatesresolvers.letsencrypt.acme.dnsChallenge.propagation.delayBeforeChecks=30"
+      - "--certificatesresolvers.letsencrypt.acme.email=ton.email@exemple.com"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--log.level=TRACE"
       - "--accesslog=true"
+    environment:
+      - OVH_ENDPOINT=ovh-eu
+      - OVH_APPLICATION_KEY=209cc45eacc85e05
+      - OVH_APPLICATION_SECRET=75830c42e43febed458f64f60ae7394a
+      - OVH_CONSUMER_KEY=b22006ee909fac2826894d52b03686b9
     ports:
       - "80:80"
+      - "443:443"
       - "8888:8080"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "letsencrypt:/letsencrypt"
     networks:
       - traefik-public
 
@@ -26,9 +40,9 @@ services:
     container_name: ecocamp_mariadb
     restart: always
     networks:
-      - reseau_ecocamp*
+      - reseau_ecocamp
     ports:
-    	-"3306:3306"
+      - "3306:3306"
     environment:
       MARIADB_ROOT_PASSWORD: ecocamp2026
       MARIADB_DATABASE: ecocamp
@@ -48,8 +62,10 @@ services:
       - reseau_ecocamp
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.flask.rule=HostRegexp(`{host:.+}`)"
-      - "traefik.http.routers.flask.entrypoints=web"
+      - "traefik.http.routers.flask.rule=Host(`ecocamp2026.btssn.ovh`)"
+      - "traefik.http.routers.flask.entrypoints=websecure"
+      - "traefik.http.routers.flask.tls=true"
+      - "traefik.http.routers.flask.tls.certresolver=letsencrypt"
       - "traefik.http.services.flask.loadbalancer.server.port=8000"
 
   phpmyadmin:
@@ -77,3 +93,4 @@ networks:
 volumes:
   ecocamp_db:
     external: true
+  letsencrypt:
