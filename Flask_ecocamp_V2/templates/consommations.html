@@ -10,9 +10,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-      
-    </style>
 </head>
 <body>
     {% include 'header.html' %}
@@ -22,7 +19,7 @@
         <h1 class="conso-title">Suivi des Consommations</h1>
         <p class="conso-subtitle">7 derniers jours — {{ hebergements | selectattr('id_hebergement', 'equalto', id_selectionne|int) | map(attribute='nom_hebergement') | first | default('') }}</p>
 
-        <!-- FILTRE — pas d'option "Tous les logements" -->
+        <!-- FILTRE -->
         <div class="filter-bar">
             <label>Logement :</label>
             <form action="/consommations" method="GET">
@@ -107,7 +104,6 @@
                         <th>Flux</th>
                         <th>Index</th>
                         <th>Conso réelle</th>
-                        <th>Statut</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -131,20 +127,11 @@
                                 <span style="color:#cbd5e1;">—</span>
                             {% endif %}
                         </td>
-                        <td>
-                            {% if c.id_type_flux == 4 %}{% set conso=c.conso_reelle_eau %}{% set seuil=c.quota_eau_max %}
-                            {% else %}{% set conso=c.conso_reelle_elec %}{% set seuil=c.quota_elec_max %}{% endif %}
-                            {% if conso is not none and conso > seuil %}
-                                <span class="badge-status alert"><span class="s-dot"></span>Alerte</span>
-                            {% else %}
-                                <span class="badge-status ok"><span class="s-dot"></span>Normal</span>
-                            {% endif %}
-                        </td>
                     </tr>
                     {% endfor %}
                     {% if not consommations %}
                     <tr class="empty-row">
-                        <td colspan="5">Aucune donnée sur les 7 derniers jours.</td>
+                        <td colspan="4">Aucune donnée sur les 7 derniers jours.</td>
                     </tr>
                     {% endif %}
                 </tbody>

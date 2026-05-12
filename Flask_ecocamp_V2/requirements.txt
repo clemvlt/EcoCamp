@@ -1,0 +1,5 @@
+flask
+flask-mysqldb
+gunicorn
+bcrypt
+paho-mqtt

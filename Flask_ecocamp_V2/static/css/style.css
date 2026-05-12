@@ -137,6 +137,7 @@ nav {
    GRILLES
    ============================================ */
 .main-grid {
+
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 25px;
@@ -685,4 +686,33 @@ nav {
     font-size: 0.7rem;
     margin-top: 5px;
     opacity: 0.5;
+}
+
+
+
+
+.scroll-hint {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--navy);
+    color: #fff;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    animation: bounce 1.8s ease-in-out infinite;
+    opacity: 0.75;
+    cursor: pointer;
+    z-index: 500;
+    transition: opacity 0.4s;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50%       { transform: translateX(-50%) translateY(-8px); }
 }
