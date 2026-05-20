@@ -1,17 +1,34 @@
-
-# Import des modules nécessaires pour Flask et la gestion des requêtes HTTP
 from flask import render_template, request, jsonify, session, redirect, url_for, flash
-from modele.Client import Client  # Module pour interagir avec la base de données
-from utils.publisher_logements import LogementPublisher  # Publie les informations des logements via MQTT
-from utils.publisher_donnees import DonneesPublisher  # Publie les données de consommation via MQTT
-from utils.publisher_messages import MessagesPublisher  # Publie les messages via MQTT
-from utils.publisher_quota import QuotaPublisher  # Publie les quotas via MQTT
+from modele.Client import Client
+from utils.publisher_v2 import LogementPublisher
+from utils.publisher_v2 import DonneesPublisher
+from utils.publisher_v2 import ConsommationsPublisher
+from utils.publisher_v2 import MessagesPublisher
+from utils.publisher_v2 import QuotaPublisher
+from utils.publisher_v2 import EvenementsPublisher
+
+
+def publier_tout():
+    """Publie toutes les données sur le broker MQTT après une modification."""
+    erreurs = []
+    for label, cls in [
+        ("logements",     LogementPublisher),
+        ("consommations", ConsommationsPublisher),
+        ("donnees",       DonneesPublisher),
+        ("quotas",        QuotaPublisher),
+        ("messages",      MessagesPublisher),
+        ("evenements",    EvenementsPublisher),
+    ]:
+        try:
+            cls().publier_tout()
+        except Exception as e:
+            erreurs.append(f"{label}: {e}")
+    return erreurs
+
 
 class controleur_principal:
     def __init__(self, appli):
-        """Initialise le contrôleur avec la connexion MySQL et les routes autorisées sans authentification."""
-        self.mysql = appli.mysql  # Connexion MySQL partagée avec l'application Flask
-        # Routes accessibles sans être connecté (ex: login, fichiers statiques)
+        self.mysql = appli.mysql
         self.routes_exceptions = ['afficher_login', 'static', 'traiter_login']
 
     # ==========================================
@@ -19,109 +36,84 @@ class controleur_principal:
     # ==========================================
 
     def afficher_login(self):
-        """Affiche la page de connexion (login.html)."""
-        return render_template("login.html")  # Rend le template de connexion
+        return render_template("login.html")
 
     def afficher_index(self):
-        """Affiche la page d'accueil (index.html)."""
-        return render_template("index.html")  # Rend le template d'accueil
+        return render_template("index.html")
 
     def traiter_login(self):
-        """Traite la requête de connexion : vérifie les identifiants et crée une session si valide."""
         try:
-            data = request.json  # Récupère les données JSON envoyées par le client
-            login = data["identifiant"]  # Identifiant saisi par l'utilisateur
-            mdp = data["pwd"]  # Mot de passe saisi
-
-            client = Client(self.mysql)  # Crée une instance du client pour interagir avec la base
-            res = client.test_login(login, mdp)  # Vérifie les identifiants en base
-
-            if res["valeur"] == 1:  # Si l'authentification réussit
-                session.permanent = True  # Session permanente
-                session['client'] = login  # Stocke l'identifiant dans la session
-
-            return jsonify(res)  # Retourne le résultat sous forme JSON
+            data = request.json
+            login = data["identifiant"]
+            mdp = data["pwd"]
+            client = Client(self.mysql)
+            res = client.test_login(login, mdp)
+            if res["valeur"] == 1:
+                session.permanent = True
+                session['client'] = login
+            return jsonify(res)
         except Exception:
-            # En cas d'erreur (ex: données manquantes), retourne un échec
             return jsonify({"valeur": 0})
 
     def test_before_request(self):
-        """
-        Middleware Flask : vérifie si l'utilisateur est connecté avant chaque requête.
-        Redirige vers la page de login si non connecté et que la route n'est pas une exception.
-        """
-        # Vérifie si la route actuelle n'est pas dans les exceptions (ex: login)
         if request.endpoint and request.endpoint not in self.routes_exceptions:
-            if not session.get("client"):  # Si l'utilisateur n'est pas connecté
-                return redirect(url_for('afficher_login'))  # Redirige vers le login
+            if not session.get("client"):
+                return redirect(url_for('afficher_login'))
 
     def deconnexion(self):
-        """Déconnecte l'utilisateur en vidant la session et redirige vers le login."""
-        session.clear()  # Supprime toutes les données de session
-        return redirect(url_for('afficher_login'))  # Redirige vers la page de login
+        session.clear()
+        return redirect(url_for('afficher_login'))
 
     # ==========================================
     # --- QUOTAS ---
     # ==========================================
 
     def afficher_quotas(self):
-        """Affiche la page des quotas et traite la mise à jour des quotas par type de logement."""
-        client = Client(self.mysql)  # Instance pour interagir avec la base
-
-        if request.method == 'POST':  # Si le formulaire de mise à jour est soumis
+        client = Client(self.mysql)
+        if request.method == 'POST':
             try:
-                # Récupère les valeurs du formulaire
-                id_type = int(request.form.get("id_type_logement"))  # ID du type de logement
-                eau = float(request.form.get("quota_eau"))  # Quota d'eau
-                elec = float(request.form.get("quota_elec"))  # Quota d'électricité
-
-                # Met à jour les quotas en base
+                id_type = int(request.form.get("id_type_logement"))
+                eau = float(request.form.get("quota_eau"))
+                elec = float(request.form.get("quota_elec"))
                 client.modifier_quota_type(id_type, eau, elec)
-                flash("Quotas mis à jour avec succès !", "success")  # Message de succès
+                flash("Quotas mis à jour avec succès !", "success")
 
-                # Publie les nouveaux quotas via MQTT
-                try:
-                    QuotaPublisher().publier_tout()  # Publie tous les quotas
-                except Exception as e:
-                    # Affiche un message d'erreur si la publication MQTT échoue
-                    flash(f"Quotas mis à jour mais erreur MQTT : {e}", "error")
+                # Publie quotas + données (les quotas impactent l'affichage des consommations)
+                erreurs = []
+                for label, cls in [("quotas", QuotaPublisher), ("donnees", DonneesPublisher)]:
+                    try:
+                        cls().publier_tout()
+                    except Exception as e:
+                        erreurs.append(f"{label}: {e}")
+                if erreurs:
+                    flash(f"Quotas mis à jour mais erreur MQTT : {', '.join(erreurs)}", "error")
 
             except (ValueError, TypeError):
-                # Erreur si les valeurs ne sont pas valides (ex: non numériques)
                 flash("Erreur dans les valeurs saisies.", "error")
-            return redirect(url_for('quotas'))  # Recharge la page des quotas
+            return redirect(url_for('quotas'))
 
-        # Si GET, récupère les types de logement pour afficher le formulaire
         types = client.get_types_logement()
-        return render_template("quotas.html", types_logement=types)  # Affiche la page avec les types
+        return render_template("quotas.html", types_logement=types)
 
     # ==========================================
     # --- CONSOMMATIONS ---
     # ==========================================
 
     def afficher_consommations(self):
-        """
-        Affiche les relevés de consommation filtrés par hébergement.
-        Si aucun logement n'est sélectionné, redirige vers le premier logement disponible.
-        """
         client = Client(self.mysql)
-        hebergements = client.get_hebergements()  # Liste de tous les hébergements
-        id_h = request.args.get('id_hebergement')  # ID de l'hébergement sélectionné
+        hebergements = client.get_hebergements()
+        id_h = request.args.get('id_hebergement')
 
-        # Si aucun hébergement n'est sélectionné, redirige vers le premier
         if not id_h and hebergements:
-            # Récupère l'ID du premier hébergement (gère les deux formats de résultat possible)
             premier_id = hebergements[0]['id_hebergement'] if isinstance(hebergements[0], dict) else hebergements[0][0]
             return redirect(url_for('consommations', id_hebergement=premier_id))
 
-        # Récupère les consommations pour l'hébergement sélectionné
         conso = client.get_consommations_par_hebergement(id_h) if id_h else []
-
         return render_template(
             "consommations.html",
-            consommations=conso,  # Données de consommation
-            hebergements=hebergements,  # Liste des hébergements pour le filtre
-            id_selectionne=id_h  # ID de l'hébergement actuellement sélectionné
+            consommations=conso,
+            hebergements=hebergements,
+            id_selectionne=id_h
         )
 
     # ==========================================
@@ -129,175 +121,212 @@ class controleur_principal:
     # ==========================================
 
     def afficher_sejours(self):
-        """Affiche la liste des séjours et le formulaire pour en créer un nouveau."""
         client = Client(self.mysql)
-        liste_sejours = client.get_sejours()  # Récupère tous les séjours
-        liste_h = client.get_hebergements()  # Récupère tous les hébergements
-        return render_template(
-            "sejours.html",
-            sejours=liste_sejours,  # Liste des séjours pour l'affichage
-            hebergements=liste_h  # Liste des hébergements pour le formulaire
-        )
+        liste_sejours = client.get_sejours()
+        liste_h = client.get_hebergements()
+        return render_template("sejours.html", sejours=liste_sejours, hebergements=liste_h)
 
     def enregistrer_sejour(self):
-        """Vérifie la disponibilité du logement et crée un nouveau séjour."""
         client = Client(self.mysql)
-        id_h = request.form.get("id_hebergement")  # ID de l'hébergement
-        debut = request.form.get("date_debut")  # Date de début du séjour
-        fin = request.form.get("date_fin")  # Date de fin du séjour
+        id_h = request.form.get("id_hebergement")
+        debut = request.form.get("date_debut")
+        fin = request.form.get("date_fin")
 
-        # Vérifie que les dates sont fournies
         if not debut or not fin:
             flash("Veuillez choisir des dates valides.", "error")
             return redirect(url_for('sejours'))
 
-        # Vérifie que le logement est disponible pour les dates demandées
         if not client.logement_est_disponible(id_h, debut, fin):
             flash("Ce logement est déjà occupé pour ces dates !", "error")
             return redirect(url_for('sejours'))
 
         try:
-            client.ajouter_sejour(id_h, debut, fin)  # Crée le séjour en base
+            client.ajouter_sejour(id_h, debut, fin)
             flash("Séjour enregistré avec succès !", "success")
 
-            # Publie les mises à jour via MQTT
-            try:
-                QuotaPublisher().publier_tout()  # Met à jour les quotas
-                DonneesPublisher().publier_tout()  # Met à jour les données
-            except Exception as e:
-                flash(f"Séjour enregistré mais erreur MQTT : {e}", "error")
+            # Publie tout : le séjour impacte quotas, données et logements
+            erreurs = publier_tout()
+            if erreurs:
+                flash(f"Séjour enregistré mais erreurs MQTT : {', '.join(erreurs)}", "error")
 
         except Exception as e:
             flash(f"Une erreur est survenue : {e}", "error")
 
-        return redirect(url_for('sejours'))  # Recharge la page des séjours
+        return redirect(url_for('sejours'))
 
     def supprimer_sejour(self, id_sejour):
-        """Supprime un séjour et ses données associées (historique, quotas)."""
         client = Client(self.mysql)
         try:
-            client.supprimer_sejour(id_sejour)  # Supprime le séjour en base
+            client.supprimer_sejour(id_sejour)
             flash("Séjour supprimé.", "success")
 
-            # Publie les mises à jour via MQTT
-            try:
-                QuotaPublisher().publier_tout()  # Met à jour les quotas
-                DonneesPublisher().publier_tout()  # Met à jour les données
-            except Exception as e:
-                flash(f"Séjour supprimé mais erreur MQTT : {e}", "error")
+            erreurs = publier_tout()
+            if erreurs:
+                flash(f"Séjour supprimé mais erreurs MQTT : {', '.join(erreurs)}", "error")
 
         except Exception as e:
             flash(f"Erreur lors de la suppression : {e}", "error")
-        return redirect(url_for('sejours'))  # Recharge la page des séjours
+        return redirect(url_for('sejours'))
 
     # ==========================================
-    # --- PUBLICATION MQTT LOGEMENTS ---
+    # --- API SÉJOURS (sans rechargement) ---
+    # ==========================================
+
+    def api_enregistrer_sejour(self):
+        """API pour enregistrer un séjour sans rechargement de page"""
+        try:
+            data = request.get_json()
+            id_hebergement = data.get('id_hebergement')
+            date_debut = data.get('date_debut')
+            date_fin = data.get('date_fin')
+            
+            if not id_hebergement or not date_debut or not date_fin:
+                return jsonify({"success": False, "message": "Veuillez remplir tous les champs"})
+            
+            client = Client(self.mysql)
+            
+            # Vérifier la disponibilité
+            if not client.logement_est_disponible(id_hebergement, date_debut, date_fin):
+                return jsonify({"success": False, "message": "Ce logement est déjà occupé pour ces dates"})
+            
+            # Ajouter le séjour
+            client.ajouter_sejour(id_hebergement, date_debut, date_fin)
+            
+            # Publier les données MQTT
+            erreurs = publier_tout()
+            
+            return jsonify({
+                "success": True, 
+                "message": "Séjour créé avec succès",
+                "mqtt_errors": erreurs if erreurs else None
+            })
+            
+        except Exception as e:
+            return jsonify({"success": False, "message": str(e)})
+
+    def api_get_sejours(self):
+        """API pour récupérer la liste des séjours (format JSON)"""
+        try:
+            client = Client(self.mysql)
+            sejours = client.get_sejours()
+            
+            # Formater les dates pour JSON
+            for s in sejours:
+                if s.get('date_debut_sejour'):
+                    s['date_debut_sejour'] = s['date_debut_sejour'].strftime('%Y-%m-%d')
+                if s.get('date_fin_sejour'):
+                    s['date_fin_sejour'] = s['date_fin_sejour'].strftime('%Y-%m-%d')
+                # S'assurer que l'ID est un entier
+                s['id_sejour'] = int(s['id_sejour']) if s.get('id_sejour') else 0
+            
+            return jsonify(sejours)
+        except Exception as e:
+            print(f"Erreur API get_sejours: {e}")
+            return jsonify([])
+
+    def api_supprimer_sejour(self, id_sejour):
+        """API pour supprimer un séjour sans rechargement de page"""
+        try:
+            client = Client(self.mysql)
+            client.supprimer_sejour(id_sejour)
+            
+            # Publier les données MQTT
+            erreurs = publier_tout()
+            
+            return jsonify({
+                "success": True, 
+                "message": "Séjour supprimé avec succès",
+                "mqtt_errors": erreurs if erreurs else None
+            })
+            
+        except Exception as e:
+            return jsonify({"success": False, "message": str(e)})
+
+    # ==========================================
+    # --- PUBLICATION MQTT MANUELLE ---
     # ==========================================
 
     def publier_logements(self):
-        """Publie la liste des logements avec leur adresse MAC via MQTT."""
+        """Publication manuelle de tous les logements."""
         try:
-            publisher = LogementPublisher()  # Instance pour publier les logements
-            logements = publisher.get_logements()  # Récupère les logements depuis la base
-            if not logements:
-                flash("Aucun logement trouvé en base.", "error")
-                return redirect(url_for('sejours'))
-            publisher.publier_par_logement(logements)  # Publie chaque logement via MQTT
-            flash(f"{len(logements)} logement(s) publiés sur le broker MQTT.", "success")
+            LogementPublisher().publier_tout()
+            flash("Logements publiés sur le broker MQTT.", "success")
         except Exception as e:
-            flash(f"Erreur lors de la publication MQTT : {e}", "error")
-        return redirect(url_for('sejours'))  # Retour à la page des séjours
-
-    # ==========================================
-    # --- PUBLICATION MQTT DONNÉES (historique 7j) ---
-    # ==========================================
+            flash(f"Erreur MQTT : {e}", "error")
+        return redirect(url_for('sejours'))
 
     def publier_donnees(self):
-        """
-        Publie les données de consommation (index courant, historique des 7 derniers jours)
-        pour tous les hébergements via MQTT.
-        """
+        """Publication manuelle de toutes les données (consommations + historique 7j)."""
         try:
-            publisher = DonneesPublisher()  # Instance pour publier les données
-            donnees = publisher.get_donnees()  # Récupère les données depuis la base
-            if not donnees:
-                flash("Aucun hébergement avec adresse MAC trouvé.", "error")
-                return redirect(url_for('consommations'))
-            nb = publisher.publier_par_donnees(donnees)  # Publie les données via MQTT
-            flash(
-                f"{nb} hébergement(s) publiés avec leur historique 7 jours sur le broker MQTT.",
-                "success",
-            )
+            ConsommationsPublisher().publier_tout()
+            DonneesPublisher().publier_tout()
+            flash("Données publiées sur le broker MQTT.", "success")
         except Exception as e:
-            flash(f"Erreur lors de la publication MQTT des données : {e}", "error")
-        return redirect(url_for('consommations'))  # Retour à la page des consommations
+            flash(f"Erreur MQTT : {e}", "error")
+        return redirect(url_for('consommations'))
 
     # ==========================================
     # --- MESSAGES ---
     # ==========================================
 
     def afficher_messages(self):
-        """Affiche la page des messages avec l'historique et le formulaire de création."""
         client = Client(self.mysql)
-        messages = client.get_messages()  # Récupère tous les messages
-        types_message = client.get_types_message()  # Récupère les types de messages
-        return render_template(
-            "messages.html",
-            messages=messages,  # Liste des messages pour l'affichage
-            types_message=types_message  # Types de messages pour le formulaire
-        )
+        messages = client.get_messages()
+        types_message = client.get_types_message()
+        return render_template("messages.html", messages=messages, types_message=types_message)
 
     def enregistrer_message(self):
-        """Enregistre un nouveau message en base de données."""
         client = Client(self.mysql)
         try:
-            # Récupère les données du formulaire
-            contenu = request.form.get("contenu_message", "").strip()  # Contenu du message
-            date_debut = request.form.get("date_debut_message")  # Date de début d'affichage
-            date_fin = request.form.get("date_fin_message")  # Date de fin d'affichage
-            horaire = request.form.get("horaire_evenement_message") or None  # Horaire (optionnel)
-            id_type = int(request.form.get("id_type_message"))  # Type de message
+            contenu = request.form.get("contenu_message", "").strip()
+            date_debut = request.form.get("date_debut_message")
+            date_fin = request.form.get("date_fin_message")
+            horaire = request.form.get("horaire_evenement_message") or None
+            id_type = int(request.form.get("id_type_message"))
 
-            # Vérifie que les champs obligatoires sont remplis
             if not contenu or not date_debut or not date_fin:
                 flash("Veuillez remplir tous les champs obligatoires.", "error")
                 return redirect(url_for('messages'))
 
-            # Enregistre le message en base
             client.ajouter_message(contenu, date_debut, date_fin, horaire, id_type)
             flash("Message enregistré avec succès !", "success")
 
-            # Publie le message via MQTT
-            try:
-                MessagesPublisher().publier_tout()  # Publie tous les messages
-            except Exception as e:
-                flash(f"Message enregistré mais erreur MQTT : {e}", "error")
+            # Publie messages ET évènements (le nouveau message peut être un évènement)
+            erreurs = []
+            for label, cls in [("messages", MessagesPublisher), ("evenements", EvenementsPublisher)]:
+                try:
+                    cls().publier_tout()
+                except Exception as e:
+                    erreurs.append(f"{label}: {e}")
+            if erreurs:
+                flash(f"Message enregistré mais erreurs MQTT : {', '.join(erreurs)}", "error")
 
         except Exception as e:
             flash(f"Une erreur est survenue : {e}", "error")
-        return redirect(url_for('messages'))  # Recharge la page des messages
+        return redirect(url_for('messages'))
 
     def supprimer_message(self, id_message):
-        """Supprime un message par son ID."""
         client = Client(self.mysql)
         try:
-            client.supprimer_message(id_message)  # Supprime le message en base
+            client.supprimer_message(id_message)
             flash("Message supprimé.", "success")
 
-            # Publie la mise à jour via MQTT
-            try:
-                MessagesPublisher().publier_tout()  # Met à jour les messages publiés
-            except Exception as e:
-                flash(f"Message supprimé mais erreur MQTT : {e}", "error")
+            erreurs = []
+            for label, cls in [("messages", MessagesPublisher), ("evenements", EvenementsPublisher)]:
+                try:
+                    cls().publier_tout()
+                except Exception as e:
+                    erreurs.append(f"{label}: {e}")
+            if erreurs:
+                flash(f"Message supprimé mais erreurs MQTT : {', '.join(erreurs)}", "error")
 
         except Exception as e:
             flash(f"Erreur lors de la suppression : {e}", "error")
-        return redirect(url_for('messages'))  # Recharge la page des messages
+        return redirect(url_for('messages'))
 
     # ==========================================
     # --- ERREURS ---
     # ==========================================
 
     def page_not_found(self, e):
-        """Affiche une page d'erreur 404 personnalisée."""
-        return render_template('404.html'), 404  # Rend le template 404 avec le code HTTP 404
+        return render_template('404.html'), 404
