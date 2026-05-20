@@ -16,18 +16,6 @@
 
     <main class="page-section sejours-page">
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        <div id="flash-container">
-            {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">
-                {{ '⚠️ ' if category == 'error' else '✅ ' }}{{ message }}
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-        {% endwith %}
-
         <div class="welcome-header">
             <h1>Gestion des Séjours</h1>
             <p>Liste des réservations et occupations des logements</p>
@@ -36,10 +24,11 @@
         <div class="card-panel-table">
 
             <div class="sejours-actions-bar">
+                <h3>Réservations actuelles</h3>
+                <div class="sejours-actions-group">
                     <button onclick="ouvrirModale()" class="btn-small btn-new-sejour">
                         + Nouveau séjour
                     </button>
-
                 </div>
             </div>
 
@@ -54,26 +43,23 @@
                         <th style="text-align: center;">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="sejoursTableBody">
                     {% for s in sejours %}
-                    <tr>
+                    <tr id="sejour-{{ s.id_sejour }}">
                         <td>#{{ s.id_sejour }}</td>
                         <td><strong>{{ s.nom_hebergement }}</strong></td>
                         <td>{{ s.date_debut_sejour }}</td>
                         <td>{{ s.date_fin_sejour }}</td>
                         <td><span class="status-badge success">Confirmé</span></td>
                         <td style="text-align: center;">
-                            <button type="button" class="btn-delete"
-                                onclick="ouvrirModaleSuppr('{{ s.id_sejour }}', '{{ s.nom_hebergement }}')">
+                            <button type="button" class="btn-delete" onclick="supprimerSejour({{ s.id_sejour }}, '{{ s.nom_hebergement }}')">
                                 🗑️
                             </button>
                         </td>
                     </tr>
                     {% else %}
-                    <tr>
-                        <td colspan="6" class="empty-table-cell">
-                            Aucun séjour enregistré.
-                        </td>
+                    <tr id="empty-row">
+                        <td colspan="6" class="empty-table-cell">Aucun séjour enregistré.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -86,10 +72,10 @@
         <div class="modal-content">
             <span class="close-btn" onclick="fermerModale()">&times;</span>
             <h2>Nouveau Séjour</h2>
-            <form action="/enregistrer_sejour" method="POST">
+            <form id="formNouveauSejour">
                 <div class="input-field">
                     <label>Choisir l'hébergement</label>
-                    <select name="id_hebergement" class="form-select" required>
+                    <select name="id_hebergement" id="id_hebergement" class="form-select" required>
                         {% for h in hebergements %}
                         <option value="{{ h.id_hebergement }}">{{ h.nom_hebergement }}</option>
                         {% endfor %}
@@ -97,41 +83,18 @@
                 </div>
                 <div class="input-field">
                     <label>Date de début</label>
-                    <input type="date" name="date_debut" class="form-input" required>
+                    <input type="date" name="date_debut" id="date_debut" class="form-input" required>
                 </div>
                 <div class="input-field">
                     <label>Date de fin</label>
-                    <input type="date" name="date_fin" class="form-input" required>
+                    <input type="date" name="date_fin" id="date_fin" class="form-input" required>
                 </div>
                 <button type="submit" class="btn-save">Créer le séjour</button>
             </form>
         </div>
     </div>
 
-    <!-- Modale confirmation suppression -->
-    <div id="modalConfirmSuppr" class="modal">
-        <div class="modal-content">
-            <div style="font-size: 50px; margin-bottom: 10px;">🗑️</div>
-            <h2>Supprimer ?</h2>
-            <p>Voulez-vous vraiment supprimer le séjour pour :<br>
-                <strong id="nomHebergementSuppr"></strong> ?
-            </p>
-            <div class="modal-footer">
-                <button onclick="fermerModaleSuppr()" class="btn-cancel">Annuler</button>
-                <a id="lienSupprimer" href="#" class="btn-confirm">Supprimer définitivement</a>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        setTimeout(function() {
-            let flash = document.getElementById('flash-container');
-            if (flash) {
-                flash.classList.add('flash-fade-out');
-                setTimeout(() => flash.remove(), 500);
-            }
-        }, 5000);
-    </script>
+    <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
     <script src="{{ url_for('static', filename='js/sejours.js') }}"></script>
     {% include 'footer.html' %}
 </body>
