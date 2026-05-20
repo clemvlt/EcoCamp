@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from controleur.controleur_principal import controleur_principal
 from flask_mysqldb import MySQL
@@ -10,8 +11,8 @@ class Application:
     Crée les routes et lance l'application.
     """
     def __init__(self):
-        template_dir = "../templates"
-        static_dir = "../static"
+        template_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "templates")
+        static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "static")
 
         self.app = Flask(
             __name__,
@@ -49,16 +50,26 @@ class Application:
         self.app.add_url_rule("/consommations", endpoint="consommations", view_func=self.cp.afficher_consommations, methods=["GET"])
         self.app.add_url_rule("/messages", endpoint="messages", view_func=self.cp.afficher_messages, methods=["GET"])
 
-        # Actions séjours
+        # Actions séjours (rechargement classique)
         self.app.add_url_rule("/enregistrer_sejour", view_func=self.cp.enregistrer_sejour, methods=["POST"])
         self.app.add_url_rule("/supprimer_sejour/<int:id_sejour>", view_func=self.cp.supprimer_sejour, methods=["GET"])
+
+        # API SÉJOURS (sans rechargement avec fetch)
+        self.app.add_url_rule("/api/enregistrer_sejour", view_func=self.cp.api_enregistrer_sejour, methods=["POST"])
+        self.app.add_url_rule("/api/get_sejours", view_func=self.cp.api_get_sejours, methods=["GET"])
+        self.app.add_url_rule("/api/supprimer_sejour/<int:id_sejour>", view_func=self.cp.api_supprimer_sejour, methods=["DELETE"])
 
         # Publication MQTT logements
         self.app.add_url_rule("/publier_logements", endpoint="publier_logements", view_func=self.cp.publier_logements, methods=["POST"])
 
-        # Actions messages
+        # Actions messages (rechargement classique)
         self.app.add_url_rule("/enregistrer_message", view_func=self.cp.enregistrer_message, methods=["POST"])
         self.app.add_url_rule("/supprimer_message/<int:id_message>", view_func=self.cp.supprimer_message, methods=["GET"])
+
+        # API MESSAGES (sans rechargement avec fetch) - optionnel
+        # self.app.add_url_rule("/api/enregistrer_message", view_func=self.cp.api_enregistrer_message, methods=["POST"])
+        # self.app.add_url_rule("/api/get_messages", view_func=self.cp.api_get_messages, methods=["GET"])
+        # self.app.add_url_rule("/api/supprimer_message/<int:id_message>", view_func=self.cp.api_supprimer_message, methods=["DELETE"])
 
     def run(self):
         """Lance l'application Flask."""
