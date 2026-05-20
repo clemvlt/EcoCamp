@@ -21,7 +21,7 @@ class BasePublisher:
     def __init__(self, mqtt_client_id, topic_template=None):
         self.config = self._load_config()
         self.db_config = {
-            "host":    self.config.get("MYSQL_HOST",     "172.16.4.102"),
+            "host":    self.config.get("MYSQL_HOST",     "172.18.0.4"),
             "port":    int(self.config.get("MYSQL_PORT", 3306)),
             "user":    self.config.get("MYSQL_USER",     "ecocamp"),
             "passwd":  self.config.get("MYSQL_PASSWORD", "U3TPwTGusZ3x2NjA"),
@@ -71,7 +71,9 @@ class BasePublisher:
         normalized = re.sub(r"[^a-z0-9_-]", "", normalized)
         return normalized or "inconnu"
 
-    def build_topic(self, mac, nom):
+    def build_topic(self, mac, nom=None):
+        if nom:
+            return self.topic_template.format(mac=mac, nom=self._normalize_topic_segment(nom))
         return self.topic_template.format(mac=mac)
 
     def publish_single(self, topic, payload):
@@ -110,7 +112,7 @@ class BasePublisher:
             client.connect(self.mqtt_host, self.mqtt_port, keepalive=self.mqtt_keepalive)
             client.loop_start()
             for row in rows:
-                topic   = self.build_topic(row["mac"], row["nom"])
+                topic   = self.build_topic(row["mac"], row.get("nom"))
                 payload = payload_builder(row)
                 result  = client.publish(
                     topic,
@@ -127,6 +129,23 @@ class BasePublisher:
         except Exception as exc:
             log.error("Erreur MQTT (%s) : %s", log_label, exc)
             raise
+        finally:
+            try:
+                client.loop_stop()
+            finally:
+                client.disconnect()
+
+    def clear_topic(self, topic):
+        """Efface un topic retained en publiant un message vide."""
+        client = self._create_client()
+        try:
+            client.connect(self.mqtt_host, self.mqtt_port, keepalive=self.mqtt_keepalive)
+            client.loop_start()
+            result = client.publish(topic, "", qos=1, retain=True)
+            result.wait_for_publish()
+            log.info("Topic effacé -> %s", topic)
+        except Exception as exc:
+            log.error("Erreur clear_topic %s : %s", topic, exc)
         finally:
             try:
                 client.loop_stop()
@@ -181,12 +200,12 @@ class LogementPublisher(BasePublisher):
 
 class ConsommationsPublisher(BasePublisher):
     """
-    Topic : ecocamp/tableau_bord/{mac}/consommations_hebergements
+    Topic : ecocamp/tableau_bord/{mac}/consommations_hebergements/donnees
     """
     def __init__(self):
         super().__init__(
             mqtt_client_id="publisher_auto_consommations",
-            topic_template="ecocamp/tableau_bord/{mac}/conso_hebergements/donnees",
+            topic_template="ecocamp/tableau_bord/{mac}/consommations_hebergements/donnees",
         )
 
     def _get_data(self):
@@ -334,38 +353,17 @@ class ConsommationsPublisher(BasePublisher):
 
 
 # ==============================================================================
-# DONNEES
-# ==============================================================================
-
-class DonneesPublisher(ConsommationsPublisher):
-    """
-    Même données que ConsommationsPublisher, topic différent.
-    Topic : ecocamp/tableau_bord/{mac}/nom_hebergement/{nom}/donnees
-    """
-    def __init__(self):
-        BasePublisher.__init__(
-            self,
-            mqtt_client_id="publisher_auto_donnees",
-            topic_template="ecocamp/tableau_bord/{mac}/conso_hebergements/donnees",
-        )
-
-    def publier_tout(self):
-        rows = self._get_data()
-        self.publish_rows(rows, self._build_payload, "Aucun hébergement avec MAC trouvé.", "donnees")
-
-
-# ==============================================================================
 # QUOTAS
 # ==============================================================================
 
 class QuotaPublisher(BasePublisher):
     """
-    Topic : ecocamp/tableau_bord/{mac}/nom_hebergement/{nom}/quota
+    Topic : ecocamp/tableau_bord/{mac}/consommations_hebergements/quota
     """
     def __init__(self):
         super().__init__(
             mqtt_client_id="publisher_auto_quota",
-            topic_template="ecocamp/tableau_bord/{mac}/conso_hebergements/quota",
+            topic_template="ecocamp/tableau_bord/{mac}/consommations_hebergements/quota",
         )
 
     def publier_tout(self):
@@ -434,13 +432,13 @@ class QuotaPublisher(BasePublisher):
 
 class MessagesPublisher(BasePublisher):
     """
-    Topic fixe    : ecocamp/tableau_bord/messages  → tous les messages actifs (hors événements)
-    Topic par mac : ecocamp/tableau_bord/{mac}/infos_hebergements
+    Topic fixe    : ecocamp/tableau_bord/messages
+    Topic par mac : ecocamp/tableau_bord/{mac}/consommations_hebergements/infos_hebergements
     """
     def __init__(self):
         super().__init__(
             mqtt_client_id="publisher_auto_messages",
-            topic_template="ecocamp/tableau_bord/{mac}/conso_hebergements/infos_hebergements",
+            topic_template="ecocamp/tableau_bord/{mac}/consommations_hebergements/infos_hebergements",
         )
 
     def publier_tout(self):
@@ -495,6 +493,7 @@ class MessagesPublisher(BasePublisher):
                         "type_message": row["type_message"],
                         "date_debut":   row.get("date_debut"),
                         "date_fin":     row.get("date_fin"),
+                        "horaire":      row.get("horaire"),
                     }
                     for row in messages
                 ],
@@ -521,12 +520,12 @@ class MessagesPublisher(BasePublisher):
 
 class EvenementsPublisher(BasePublisher):
     """
-    Topic fixe : ecocamp/tableau_bord/evenements → tous les événements actifs
+    Topic fixe : ecocamp/tableau_bord/evenements
     """
     def __init__(self):
         super().__init__(
             mqtt_client_id="publisher_auto_evenements",
-            topic_template=None,  # topic fixe uniquement, pas de publish_rows
+            topic_template=None,
         )
 
     def publier_tout(self):
@@ -551,7 +550,6 @@ class EvenementsPublisher(BasePublisher):
             log.error("Erreur BDD (événements) : %s", exc)
             return
 
-        # Topic fixe uniquement
         self.publish_single(
             "ecocamp/tableau_bord/evenements",
             {
@@ -579,7 +577,6 @@ def main():
     publishers = [
         ("Logements",     LogementPublisher),
         ("Consommations", ConsommationsPublisher),
-        
         ("Quotas",        QuotaPublisher),
         ("Messages",      MessagesPublisher),
         ("Evenements",    EvenementsPublisher),
