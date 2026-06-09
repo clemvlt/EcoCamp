@@ -1,15 +1,26 @@
 document.addEventListener("DOMContentLoaded", function () {
     const boutonConnexion = document.getElementById("formulaire_login");
-    const form = document.querySelector("form");
-    const togglePassword = document.getElementById("togglePassword");
+    const loginInput = document.getElementById("login");
     const passwordInput = document.getElementById("password");
+    const togglePassword = document.getElementById("togglePassword");
     const eyeIcon = document.getElementById("eyeIcon");
 
-    // Connexion via bouton ou touche Entrée
+    // Connexion via bouton
     boutonConnexion.addEventListener("click", test_login);
-    form.addEventListener("submit", function (e) {
-        e.preventDefault();
-        test_login();
+
+    // Connexion via touche Entrée
+    loginInput.addEventListener("keypress", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            test_login();
+        }
+    });
+    
+    passwordInput.addEventListener("keypress", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            test_login();
+        }
     });
 
     // Afficher / masquer le mot de passe
@@ -24,12 +35,22 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function test_login() {
+    const identifiant = document.getElementById("login").value;
+    const pwd = document.getElementById("password").value;
+    
+    // Vérification que les champs ne sont pas vides
+    if (!identifiant || !pwd) {
+        const msgErreur = document.getElementById("message_erreur");
+        msgErreur.textContent = "Veuillez remplir tous les champs";
+        return;
+    }
+    
     fetch("/test_login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            identifiant: document.getElementById("login").value,
-            pwd: document.getElementById("password").value
+            identifiant: identifiant,
+            pwd: pwd
         })
     })
     .then(response => response.json())
@@ -47,14 +68,3 @@ function traiter_resultat_login(resu) {
         document.getElementById("password").focus();
     }
 }
-
-
-
-
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Enter') {
-        console.log('Enter key was pressed!')
-        // Your action here
-    }
-})
-

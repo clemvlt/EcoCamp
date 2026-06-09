@@ -14,7 +14,7 @@
 <body>
     {% include 'header.html' %}
 
-    <main class="conso-page">
+    <div class="conso-page">
 
         <h1 class="conso-title">Suivi des Consommations</h1>
         <p class="conso-subtitle">7 derniers jours — {{ hebergements | selectattr('id_hebergement', 'equalto', id_selectionne|int) | map(attribute='nom_hebergement') | first | default('') }}</p>
@@ -26,7 +26,7 @@
                 <select name="id_hebergement" onchange="this.form.submit()">
                     {% for h in hebergements %}
                     <option value="{{ h.id_hebergement }}"
-                        {% if id_selectionne == h.id_hebergement|string %}selected{% endif %}>
+                        {% if id_selectionne == h.id_hebergement %}selected{% endif %}>
                         {{ h.nom_hebergement }}
                     </option>
                     {% endfor %}
@@ -138,9 +138,7 @@
             </table>
         </div>
 
-    </main>
-
-    {% include 'footer.html' %}
+    </div>
 
     <!-- Données JS -->
     <script>
@@ -148,13 +146,13 @@
         {% for c in consommations %}
         {
             id_type_flux: {{ c.id_type_flux }},
-            index: {{ c.index_consommation if c.index_consommation is not none else 0 }},
+            valeur: {% if c.id_type_flux == 4 %}{% if c.conso_reelle_eau is not none %}{{ c.conso_reelle_eau }}{% else %}0{% endif %}{% else %}{% if c.conso_reelle_elec is not none %}{{ c.conso_reelle_elec }}{% else %}0{% endif %}{% endif %},
             label: "{{ c.date_consommation.strftime('%d/%m %H:%M') if c.date_consommation else 'N/A' }}"
         }{% if not loop.last %},{% endif %}
         {% endfor %}
     ];
     </script>
-    <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
     <script src="{{ url_for('static', filename='js/consommations.js') }}"></script>
+    {% include 'footer.html' %}
 </body>
 </html>

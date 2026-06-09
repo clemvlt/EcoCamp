@@ -72,7 +72,7 @@ class BasePublisher:
         return normalized or "inconnu"
 
     def build_topic(self, mac, nom):
-        return self.topic_template.format(mac=mac)
+        return self.topic_template.format(mac=mac, nom=self._normalize_topic_segment(nom))
 
     def publish_single(self, topic, payload):
         """Publie un seul message sur un topic fixe."""
@@ -186,7 +186,7 @@ class ConsommationsPublisher(BasePublisher):
     def __init__(self):
         super().__init__(
             mqtt_client_id="publisher_auto_consommations",
-            topic_template="ecocamp/tableau_bord/{mac}/conso_hebergements/donnees",
+            topic_template="ecocamp/tableau_bord/{mac}/consommations_hebergements",
         )
 
     def _get_data(self):
@@ -346,7 +346,7 @@ class DonneesPublisher(ConsommationsPublisher):
         BasePublisher.__init__(
             self,
             mqtt_client_id="publisher_auto_donnees",
-            topic_template="ecocamp/tableau_bord/{mac}/conso_hebergements/donnees",
+            topic_template="ecocamp/tableau_bord/{mac}/nom_hebergement/{nom}/donnees",
         )
 
     def publier_tout(self):
@@ -365,7 +365,7 @@ class QuotaPublisher(BasePublisher):
     def __init__(self):
         super().__init__(
             mqtt_client_id="publisher_auto_quota",
-            topic_template="ecocamp/tableau_bord/{mac}/conso_hebergements/quota",
+            topic_template="ecocamp/tableau_bord/{mac}/nom_hebergement/{nom}/quota",
         )
 
     def publier_tout(self):
@@ -440,7 +440,7 @@ class MessagesPublisher(BasePublisher):
     def __init__(self):
         super().__init__(
             mqtt_client_id="publisher_auto_messages",
-            topic_template="ecocamp/tableau_bord/{mac}/conso_hebergements/infos_hebergements",
+            topic_template="ecocamp/tableau_bord/{mac}/infos_hebergements",
         )
 
     def publier_tout(self):
@@ -579,7 +579,7 @@ def main():
     publishers = [
         ("Logements",     LogementPublisher),
         ("Consommations", ConsommationsPublisher),
-        
+        ("Donnees",       DonneesPublisher),
         ("Quotas",        QuotaPublisher),
         ("Messages",      MessagesPublisher),
         ("Evenements",    EvenementsPublisher),

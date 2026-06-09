@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const joursSemaine = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
 
+    // Helper : transforme "DD/MM HH:mm" en label lisible avec le jour
     function buildLabel(labelStr) {
         const parties = labelStr.split(' ');
         const dateParts = parties[0].split('/');
@@ -10,46 +11,37 @@ document.addEventListener('DOMContentLoaded', function () {
         return joursSemaine[dateObj.getDay()] + ' ' + parties[0];
     }
 
-    // Données triées chronologiquement par type
+    // ── Filtrage par type, ordre chronologique (les données arrivent DESC) ──
     const dataEau  = rawData.filter(d => d.id_type_flux === 4).reverse();
     const dataElec = rawData.filter(d => d.id_type_flux === 3).reverse();
 
-    // ── KPI : dernier index brut ──
+    // ── Mise à jour des KPI cards ──
     if (dataEau.length > 0) {
-        const v = dataEau[dataEau.length - 1].index;
+        const v = dataEau[dataEau.length - 1].valeur;
         document.getElementById('valeurEau').textContent = (v || 0).toFixed(2) + ' L';
     }
     if (dataElec.length > 0) {
-        const v = dataElec[dataElec.length - 1].index;
+        const v = dataElec[dataElec.length - 1].valeur;
         document.getElementById('valeurElec').textContent = (v || 0).toFixed(2) + ' kWh';
     }
 
-    // ── Calcul conso journalière = index[j] - index[j-1] ──
-    function calcDelta(data) {
-        return data.map((d, i) => {
-            if (i === 0) return { label: d.label, valeur: 0 };
-            const delta = d.index - data[i - 1].index;
-            return { label: d.label, valeur: delta >= 0 ? parseFloat(delta.toFixed(2)) : 0 };
-        }).slice(1); // on retire le premier point (pas de J-1)
-    }
-
-    const deltaEau  = calcDelta(dataEau);
-    const deltaElec = calcDelta(dataElec);
-
-    const darkGrid    = 'rgba(255,255,255,.06)';
-    const tickColor   = '#64748b';
+    // ── Thème commun sombre ──
+    const darkGrid  = 'rgba(255,255,255,.06)';
+    const tickColor = '#64748b';
     const legendColor = '#94a3b8';
 
-    // ══ GRAPHIQUE EAU ══
+    // ══════════════════════════════════════════
+    // GRAPHIQUE EAU
+    // ══════════════════════════════════════════
     const canvasEau = document.getElementById('chartEau');
-    if (canvasEau && deltaEau.length > 0) {
+    if (canvasEau && dataEau.length > 0) {
         new Chart(canvasEau.getContext('2d'), {
             type: 'bar',
             data: {
-                labels: deltaEau.map(d => buildLabel(d.label)),
+                labels: dataEau.map(d => buildLabel(d.label)),
                 datasets: [{
                     label: 'Eau (L)',
-                    data: deltaEau.map(d => d.valeur),
+                    data: dataEau.map(d => d.valeur),
                     backgroundColor: '#0b59a2',
                     borderColor:     '#0b59a2',
                     borderWidth: 1,
@@ -59,9 +51,15 @@ document.addEventListener('DOMContentLoaded', function () {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { labels: { color: legendColor } } },
+                plugins: {
+                    legend: { labels: { color: legendColor } },
+                    title:  { display: false }
+                },
                 scales: {
-                    x: { ticks: { color: tickColor }, grid: { color: darkGrid } },
+                    x: {
+                        ticks: { color: tickColor },
+                        grid:  { color: darkGrid }
+                    },
                     y: {
                         beginAtZero: true,
                         ticks: { color: tickColor },
@@ -71,7 +69,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
         });
-    } else if (canvasEau) {
+    } else if (canvasEau && dataEau.length === 0) {
+        // Affiche un message vide dans le canvas
         const ctx = canvasEau.getContext('2d');
         ctx.fillStyle = '#4b5563';
         ctx.font = '14px Inter, sans-serif';
@@ -79,16 +78,18 @@ document.addEventListener('DOMContentLoaded', function () {
         ctx.fillText('Aucune donnée eau sur 7 jours', canvasEau.width / 2, canvasEau.height / 2);
     }
 
-    // ══ GRAPHIQUE ÉLECTRICITÉ ══
+    // ══════════════════════════════════════════
+    // GRAPHIQUE ÉLECTRICITÉ
+    // ══════════════════════════════════════════
     const canvasElec = document.getElementById('chartElec');
-    if (canvasElec && deltaElec.length > 0) {
+    if (canvasElec && dataElec.length > 0) {
         new Chart(canvasElec.getContext('2d'), {
             type: 'bar',
             data: {
-                labels: deltaElec.map(d => buildLabel(d.label)),
+                labels: dataElec.map(d => buildLabel(d.label)),
                 datasets: [{
                     label: 'Électricité (kWh)',
-                    data: deltaElec.map(d => d.valeur),
+                    data: dataElec.map(d => d.valeur),
                     backgroundColor: 'rgba(251,191,36,0.75)',
                     borderColor:     'rgba(251,191,36,1)',
                     borderWidth: 1,
@@ -98,9 +99,15 @@ document.addEventListener('DOMContentLoaded', function () {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { labels: { color: legendColor } } },
+                plugins: {
+                    legend: { labels: { color: legendColor } },
+                    title:  { display: false }
+                },
                 scales: {
-                    x: { ticks: { color: tickColor }, grid: { color: darkGrid } },
+                    x: {
+                        ticks: { color: tickColor },
+                        grid:  { color: darkGrid }
+                    },
                     y: {
                         beginAtZero: true,
                         ticks: { color: tickColor },
@@ -110,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
         });
-    } else if (canvasElec) {
+    } else if (canvasElec && dataElec.length === 0) {
         const ctx = canvasElec.getContext('2d');
         ctx.fillStyle = '#4b5563';
         ctx.font = '14px Inter, sans-serif';
