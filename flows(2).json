@@ -1,0 +1,113 @@
+[
+    {
+        "id": "3fe7c7dc372d8af4",
+        "type": "ui-template",
+        "z": "274df5b471b70a74",
+        "group": "1c53f384bae0b178",
+        "page": "",
+        "ui": "",
+        "name": "Programme Defilement vertical",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "head": "",
+        "format": "let data = msg.payload;\n\nif (!data || !data.evenements) {\n    node.warn(\"Payload invalide\");\n    return null;\n}\n\nmsg.payload = data.evenements.map(function(evt) {\n    return {\n        date: evt.date_debut.substring(5).replace(\"-\", \"/\"),\n        heure: evt.horaire.substring(0, 5),\n        text: evt.contenu\n    };\n});\n\nreturn msg;",
+        "storeOutMessages": true,
+        "passthru": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 690,
+        "y": 780,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "1c53f384bae0b178",
+        "type": "ui-group",
+        "name": "Message",
+        "page": "b0cbb1f580cda958",
+        "width": "6",
+        "height": "19",
+        "order": 3,
+        "showTitle": false,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "b0cbb1f580cda958",
+        "type": "ui-page",
+        "name": "Page 1",
+        "ui": "633b8a94bd62fc6f",
+        "path": "/page1",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "09dc0dcdd7206789",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Desktop",
+                "px": "800",
+                "cols": "12"
+            }
+        ],
+        "order": 1,
+        "className": "",
+        "visible": true,
+        "disabled": "false"
+    },
+    {
+        "id": "633b8a94bd62fc6f",
+        "type": "ui-base",
+        "name": "My Dashboard",
+        "path": "/dashboard",
+        "appIcon": "",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control"
+        ],
+        "showPathInSidebar": false,
+        "headerContent": "none",
+        "navigationStyle": "default",
+        "titleBarStyle": "hidden",
+        "showReconnectNotification": true,
+        "notificationDisplayTime": "1",
+        "showDisconnectNotification": true,
+        "allowInstall": true
+    },
+    {
+        "id": "09dc0dcdd7206789",
+        "type": "ui-theme",
+        "name": "Default Theme",
+        "colors": {
+            "surface": "#ffffff",
+            "primary": "#0094ce",
+            "bgPage": "#ebecf1",
+            "groupBg": "#ffffff",
+            "groupOutline": "#cccccc"
+        },
+        "sizes": {
+            "density": "compact",
+            "pagePadding": "0px",
+            "groupGap": "0px",
+            "groupBorderRadius": "0px",
+            "widgetGap": "1px"
+        }
+    },
+    {
+        "id": "7ad56564c410f59b",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "@flowfuse/node-red-dashboard": "1.30.2"
+        }
+    }
+]
