@@ -19,7 +19,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Créer le dossier instance et copier config.cfg
-RUN mkdir -p /app/instance && cp config.cfg /app/instance/
 
 # Exposer le port
 EXPOSE 8000

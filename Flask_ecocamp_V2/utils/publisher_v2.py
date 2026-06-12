@@ -28,7 +28,7 @@ class BasePublisher:
             "db":      self.config.get("MYSQL_DB",       "ecocamp"),
             "charset": "utf8mb4",
         }
-        self.mqtt_host      = self.config.get("MQTT_HOST",          "172.16.4.31")
+        self.mqtt_host      = self.config.get("MQTT_HOST",          "172.16.4.102")
         self.mqtt_port      = int(self.config.get("MQTT_PORT",      1883))
         self.mqtt_keepalive = int(self.config.get("MQTT_KEEPALIVE", 60))
         self.mqtt_client_id = mqtt_client_id

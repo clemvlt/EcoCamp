@@ -1,10 +1,20 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page introuvable</title>
+</head>
+<body>
+    {% include "header.html" %}
 
-{% block content %}
-<div class="error-container">
-    <div class="error-code">404</div>
-    <h1>Oups ! Page introuvable</h1>
-    <p>Le logement ou la page que vous cherchez n'existe pas ou a été déplacé.</p>
-    <a href="{{ url_for('index') }}" class="btn-back">Retour au Tableau de Bord</a>
-</div>
-{% endblock %}
+    <div class="error-container">
+        <div class="error-code">404</div>
+        <h1>Oups ! Page introuvable</h1>
+        <p>Le logement ou la page que vous cherchez n'existe pas ou a été déplacé.</p>
+        <a href="{{ url_for('index') }}" class="btn-back">Retour au Tableau de Bord</a>
+    </div>
+
+    {% include "footer.html" %}
+</body>
+</html>
