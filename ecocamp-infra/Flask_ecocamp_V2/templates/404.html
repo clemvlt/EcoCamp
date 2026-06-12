@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="error-container">
+    <div class="error-code">404</div>
+    <h1>Oups ! Page introuvable</h1>
+    <p>Le logement ou la page que vous cherchez n'existe pas ou a été déplacé.</p>
+    <a href="{{ url_for('index') }}" class="btn-back">Retour au Tableau de Bord</a>
+</div>
+{% endblock %}

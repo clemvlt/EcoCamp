@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages - EcoCamp</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    {% include 'header.html' %}
+
+    <main class="page-section">
+        <div class="welcome-header">
+            <h1>Messages Camping</h1>
+            <p>Communiquez avec les résidents</p>
+        </div>
+
+        {% with messages_flash = get_flashed_messages(with_categories=true) %}
+        {% if messages_flash %}
+        <div class="flash-container">
+            {% for category, message in messages_flash %}
+            <div class="alert alert-{{ category }}">
+                <span class="alert-icon">{% if category == 'success' %}✅{% else %}⚠️{% endif %}</span>
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="messages-grid">
+
+            <!-- Formulaire message général -->
+            <div class="card-panel">
+                <div class="panel-header">
+                    <h2>Message Général</h2>
+                    <p class="text-muted">Diffuser à tous les résidents</p>
+                </div>
+                <form action="{{ url_for('enregistrer_message') }}" method="POST">
+                    <input type="hidden" name="id_type_message" value="2">
+                    <div class="input-field">
+                        <label>Votre message *</label>
+                        <textarea name="contenu_message" class="form-textarea"
+                            placeholder="Ex: Piscine fermée pour entretien demain..." required></textarea>
+                    </div>
+                    <div class="form-grid">
+                        <div class="input-field">
+                            <label>Date de début *</label>
+                            <input type="date" name="date_debut_message" class="form-input" required>
+                        </div>
+                        <div class="input-field">
+                            <label>Date de fin *</label>
+                            <input type="date" name="date_fin_message" class="form-input" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-save">Envoyer le message</button>
+                </form>
+            </div>
+
+            <!-- Formulaire événement -->
+            <div class="card-panel">
+                <div class="panel-header">
+                    <h2>Événement</h2>
+                    <p class="text-muted">Programmer une animation</p>
+                </div>
+                <form action="{{ url_for('enregistrer_message') }}" method="POST">
+                    <input type="hidden" name="id_type_message" value="1">
+                    <div class="input-field">
+                        <label>Description de l'événement *</label>
+                        <textarea name="contenu_message" class="form-textarea"
+                            placeholder="Ex: Soirée grillades au club house..." required></textarea>
+                    </div>
+                    <div class="form-grid">
+                        <div class="input-field">
+                            <label>Date de début *</label>
+                            <input type="date" name="date_debut_message" class="form-input" required>
+                        </div>
+                        <div class="input-field">
+                            <label>Date de fin *</label>
+                            <input type="date" name="date_fin_message" class="form-input" required>
+                        </div>
+                    </div>
+                    <div class="input-field">
+                        <label>Heure de l'événement</label>
+                        <input type="time" name="horaire_evenement_message" class="form-input">
+                    </div>
+                    <button type="submit" class="btn-save">Programmer l'événement</button>
+                </form>
+            </div>
+
+        </div>
+
+        <!-- Historique des messages depuis la base -->
+        <div class="card-panel">
+            <div class="panel-header">
+                <h2>Messages récents</h2>
+                <p class="text-muted">Historique des communications</p>
+            </div>
+
+            <div class="messages-list">
+                {% for m in messages %}
+                <div class="message-item">
+                    <div class="message-header">
+                        <span class="message-type {{ 'event' if m.horaire_evenement_message else 'general' }}">
+                            {{ m.nom_type_message }}
+                        </span>
+                        <span class="message-date">
+                            Du {{ m.date_debut_message.strftime('%d/%m/%Y') if m.date_debut_message else '' }}
+                            au {{ m.date_fin_message.strftime('%d/%m/%Y') if m.date_fin_message else '' }}
+                            {% if m.horaire_evenement_message %}
+                            — {{ m.horaire_evenement_message }}
+                            {% endif %}
+                        </span>
+                        <a href="{{ url_for('supprimer_message', id_message=m.id_message) }}"
+                           class="btn-delete"
+                           onclick="return confirm('Supprimer ce message ?')"
+                           title="Supprimer">
+                            <svg viewBox="0 0 24 24" style="width:16px; fill:#ef4444;">
+                                <path d="M3 6h18v2H3V6zm2 3h14v13c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V9zm3 3v8h2v-8H8zm4 0v8h2v-8h-2zm4 0v8h2v-8h-2zM9 4V2h6v2h5v2H4V4h5z"/>
+                            </svg>
+                        </a>
+                    </div>
+                    <p class="message-content">{{ m.contenu_message }}</p>
+                </div>
+                {% else %}
+                <p style="text-align:center; color:#94a3b8; padding:20px;">
+                    Aucun message enregistré.
+                </p>
+                {% endfor %}
+            </div>
+        </div>
+        {% include 'footer.html' %}
+    </main>
+
+    <script>
+        setTimeout(function () {
+            const flash = document.querySelector('.flash-container');
+            if (flash) {
+                flash.style.transition = "opacity 0.5s ease";
+                flash.style.opacity = "0";
+                setTimeout(() => flash.remove(), 500);
+            }
+        }, 5000);
+    </script>
+
+</body>
+</html>

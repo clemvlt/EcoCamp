@@ -1,0 +1,120 @@
+services:
+
+  # ─────────────────────────────────────────
+  # Reverse proxy Traefik
+  # Gère le routage HTTP/HTTPS et les certificats Let's Encrypt via OVH DNS
+  # ─────────────────────────────────────────
+  traefik:
+    image: traefik:v3.6
+    container_name: ecocamp_traefik
+    restart: always
+    command:
+    - --api.dashboard=true          # Active le dashboard Traefik
+    - --api.insecure=true           # Dashboard accessible sans authentification (port 8888)
+    - --providers.docker=true       # Traefik lit la config depuis les labels Docker
+    - --providers.docker.exposedbydefault=false  # Les conteneurs ne sont pas exposés par défaut
+    - --providers.docker.network=traefik-public  # Réseau Docker utilisé par Traefik
+    - --entrypoints.web.address=:80              # Entrée HTTP sur le port 80
+    - --entrypoints.web.http.redirections.entrypoint.to=websecure    # Redirige HTTP → HTTPS
+    - --entrypoints.web.http.redirections.entrypoint.scheme=https    # Force le schéma HTTPS
+    - --entrypoints.websecure.address=:443       # Entrée HTTPS sur le port 443
+    - --certificatesresolvers.letsencrypt.acme.dnschallenge=true              # Utilise le challenge DNS pour Let's Encrypt
+    - --certificatesresolvers.letsencrypt.acme.dnschallenge.provider=ovh      # Fournisseur DNS : OVH
+    - --certificatesresolvers.letsencrypt.acme.email=admin@ecocamp2026.btssn.ovh  # Email pour Let's Encrypt
+    - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json     # Fichier de stockage des certificats
+    - --log.level=INFO              # Niveau de log
+    - --accesslog=true              # Active les logs d'accès
+    environment:
+      # Credentials OVH pour le challenge DNS Let's Encrypt
+      OVH_ENDPOINT: ovh-eu
+      OVH_APPLICATION_KEY: 7e1706f9da3213d5
+      OVH_APPLICATION_SECRET: 6267e1514d7c47289d34937a5010e64d
+      OVH_CONSUMER_KEY: b6e6e50be13ac122a8ec40502cc0a308
+    ports:
+    - 80:80       # HTTP
+    - 443:443     # HTTPS
+    - 8888:8080   # Dashboard Traefik
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock:ro  # Accès en lecture au socket Docker
+    - letsencrypt:/letsencrypt                       # Persistance des certificats SSL
+    networks:
+    - traefik-public
+
+  # ─────────────────────────────────────────
+  # Base de données MariaDB
+  # ─────────────────────────────────────────
+  db:
+    image: mariadb:latest
+    container_name: ecocamp_mariadb
+    restart: always
+    networks:
+    - reseau_ecocamp   # Réseau interne uniquement, non exposé à Traefik
+    ports:
+    - 3306:3306        # Port MariaDB exposé sur l'hôte (accès externe possible)
+    environment:
+      MARIADB_ROOT_PASSWORD: ecocamp2026        # Mot de passe root
+      MARIADB_DATABASE: ecocamp                 # Base de données créée au démarrage
+      MARIADB_USER: ecocamp                     # Utilisateur applicatif
+      MARIADB_PASSWORD: U3TPwTGusZ3x2NjA        # Mot de passe utilisateur applicatif
+    volumes:
+    - ecocamp_db:/var/lib/mysql   # Persistance des données MySQL
+
+  # ─────────────────────────────────────────
+  # Application Flask
+  # Construite depuis le Dockerfile local, exposée via Traefik en HTTPS
+  # ─────────────────────────────────────────
+  flask:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ecocamp_flask
+    restart: always
+    depends_on:
+    - db   # Attend que MariaDB soit démarré avant de lancer Flask
+    networks:
+    - traefik-public   # Permet à Traefik de router vers ce conteneur
+    - reseau_ecocamp   # Permet la communication avec la base de données
+    labels:
+    - traefik.enable=true                                              # Active Traefik pour ce conteneur
+    - traefik.http.routers.flask.rule=Host(`ecocamp2026.btssn.ovh`)   # Domaine associé
+    - traefik.http.routers.flask.entrypoints=websecure                # Accessible uniquement en HTTPS
+    - traefik.http.routers.flask.tls=true                             # Active TLS
+    - traefik.http.routers.flask.tls.certresolver=letsencrypt         # Certificat via Let's Encrypt
+    - traefik.http.services.flask.loadbalancer.server.port=8000       # Port interne de l'appli Flask
+
+  # ─────────────────────────────────────────
+  # phpMyAdmin
+  # Interface web de gestion de la base de données
+  # Accessible sur http://<ip-serveur>:8080
+  # ─────────────────────────────────────────
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: ecocamp_phpmyadmin
+    restart: always    # Démarre automatiquement avec le système
+    depends_on:
+    - db               # Attend que MariaDB soit démarré
+    networks:
+    - reseau_ecocamp   # Réseau interne partagé avec MariaDB
+    ports:
+    - 8080:80          # Interface phpMyAdmin accessible sur le port 8080 de l'hôte
+    environment:
+      PMA_HOST: ecocamp_mariadb      # Nom du conteneur MariaDB à contacter
+      MYSQL_ROOT_PASSWORD: ecocamp2026
+
+# ─────────────────────────────────────────
+# Réseaux
+# ─────────────────────────────────────────
+networks:
+  traefik-public:
+    external: true     # Réseau créé en dehors de ce compose (docker network create traefik-public)
+  reseau_ecocamp:
+    driver: bridge     # Réseau interne isolé pour la communication entre les services
+
+# ─────────────────────────────────────────
+# Volumes persistants
+# ─────────────────────────────────────────
+volumes:
+  ecocamp_db:
+    driver: local      # Données de la base de données
+  letsencrypt:
+    driver: local      # Certificats SSL Let's Encrypt

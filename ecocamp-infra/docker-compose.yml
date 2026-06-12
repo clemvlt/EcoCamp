@@ -1,0 +1,93 @@
+services:
+  traefik:
+    image: traefik:v3.6
+    container_name: ecocamp_traefik
+    restart: always
+    command:
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=traefik-public"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=ovh"
+      #- "--certificatesresolvers.letsencrypt.acme.dnsChallenge.propagation.delayBeforeChecks=30"
+      - "--certificatesresolvers.letsencrypt.acme.email=ton.email@exemple.com"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--log.level=TRACE"
+      - "--accesslog=true"
+    environment:
+      -
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8888:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "letsencrypt:/letsencrypt"
+    networks:
+      - traefik-public
+
+  db:
+    image: mariadb:latest
+    container_name: ecocamp_mariadb
+    restart: always
+    networks:
+      - reseau_ecocamp
+    ports:
+      - "3306:3306"
+    environment:
+      MARIADB_ROOT_PASSWORD: ecocamp2026
+      MARIADB_DATABASE: ecocamp
+      MARIADB_USER: ecocamp
+      MARIADB_PASSWORD: U3TPwTGusZ3x2NjA
+    volumes:
+      - ecocamp_db:/var/lib/mysql
+
+  flask:
+    build: ./Flask_ecocamp_V2
+    container_name: ecocamp_flask
+    restart: always
+    depends_on:
+      - db
+    networks:
+      - traefik-public
+      - reseau_ecocamp
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.flask.rule=Host(`ecocamp2026.btssn.ovh`)"
+      - "traefik.http.routers.flask.entrypoints=websecure"
+      - "traefik.http.routers.flask.tls=true"
+      - "traefik.http.routers.flask.tls.certresolver=letsencrypt"
+      - "traefik.http.services.flask.loadbalancer.server.port=8000"
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: ecocamp_phpmyadmin
+    restart: "no"
+    profiles:
+      - tools
+    depends_on:
+      - db
+    networks:
+      - reseau_ecocamp
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: ecocamp_mariadb
+      MYSQL_ROOT_PASSWORD: ecocamp2026
+
+networks:
+  traefik-public:
+    external: true
+  reseau_ecocamp:
+    driver: bridge
+
+volumes:
+  ecocamp_db:
+    external: true
+  letsencrypt:

@@ -1,0 +1,1344 @@
+[
+    {
+        "id": "555c17e9a449000e",
+        "type": "tab",
+        "label": "test fuse dashboard",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "59e650eb9a2bb656",
+        "type": "comment",
+        "z": "555c17e9a449000e",
+        "name": "800 × 480",
+        "info": "",
+        "x": 80,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "f40251b467199fea",
+        "type": "ui-text",
+        "z": "555c17e9a449000e",
+        "group": "920e2f4a66864e30",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "Réf_Location",
+        "label": "",
+        "format": "{{msg.payload}}",
+        "layout": "row-center",
+        "style": true,
+        "font": "",
+        "fontSize": "26",
+        "color": "#800040",
+        "wrapText": false,
+        "className": "",
+        "value": "payload",
+        "valueType": "msg",
+        "x": 1350,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "f1f963586601bc78",
+        "type": "ui-gauge",
+        "z": "555c17e9a449000e",
+        "name": "Elec",
+        "group": "544a42ad1a58b31b",
+        "order": 2,
+        "value": "payload",
+        "valueType": "msg",
+        "width": 3,
+        "height": 3,
+        "gtype": "gauge-half",
+        "gstyle": "rounded",
+        "title": "Electricité",
+        "alwaysShowTitle": false,
+        "floatingTitlePosition": "top-left",
+        "units": "kwh",
+        "icon": "",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "from": "0",
+                "color": "#5cd65c",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "200",
+                "color": "#ffc800",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "250",
+                "color": "#ea5353",
+                "text": "",
+                "textType": "label"
+            }
+        ],
+        "min": 0,
+        "max": "300",
+        "sizeThickness": "10",
+        "sizeGap": "1",
+        "sizeKeyThickness": 8,
+        "styleRounded": true,
+        "styleGlow": false,
+        "className": "",
+        "x": 1730,
+        "y": 500,
+        "wires": [
+            [
+                "c016ed635fa0f3d8"
+            ]
+        ]
+    },
+    {
+        "id": "d1c497eb1343bd15",
+        "type": "ui-template",
+        "z": "555c17e9a449000e",
+        "group": "",
+        "page": "b0cbb1f580cda958",
+        "ui": "",
+        "name": "",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "head": "",
+        "format": ":root {\n    --page-width: 800px;\n    --page-height: 480px;\n}\n\nbody,\n.nr-dashboard-theme,\nmd-content {\n    width: 800px !important;\n    height: 480px !important;\n    max-width: 800px !important;\n    max-height: 480px !important;\n    overflow: hidden !important;\n    margin: 0 auto !important;\n    padding: 0 !important;\n}\n\n.groupe-centre .v-card-title {\n    text-align: center !important;\n}",
+        "storeOutMessages": true,
+        "passthru": true,
+        "resendOnRefresh": true,
+        "templateScope": "page:style",
+        "className": "",
+        "x": 90,
+        "y": 20,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "c016ed635fa0f3d8",
+        "type": "debug",
+        "z": "555c17e9a449000e",
+        "name": "debug 2.4",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1860,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "93def74eee21585b",
+        "type": "ui-text",
+        "z": "555c17e9a449000e",
+        "group": "fcbdd154beb2fa24",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "Date_Heure",
+        "label": "",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "style": true,
+        "font": "",
+        "fontSize": "26",
+        "color": "#0000ff",
+        "wrapText": false,
+        "className": "",
+        "value": "payload",
+        "valueType": "msg",
+        "x": 530,
+        "y": 800,
+        "wires": []
+    },
+    {
+        "id": "30c8f2cbce75a2c0",
+        "type": "function",
+        "z": "555c17e9a449000e",
+        "name": "formatage date_heure",
+        "func": "// Tableaux en français\nconst jours = [\n    \"Dimanche\", \"Lundi\", \"Mardi\", \"Mercredi\",\n    \"Jeudi\", \"Vendredi\", \"Samedi\"\n];\n\nconst mois = [\n    \"Janvier\", \"Février\", \"Mars\", \"Avril\",\n    \"Mai\", \"Juin\", \"Juillet\", \"Août\",\n    \"Septembre\", \"Octobre\", \"Novembre\", \"Décembre\"\n];\n\n// Date actuelle\nlet now = new Date();\n\nlet jour = jours[now.getDay()];\nlet date = now.getDate();\nlet moisNom = mois[now.getMonth()];\n\nlet heures = now.getHours().toString().padStart(2, '0');\nlet minutes = now.getMinutes().toString().padStart(2, '0');\n\n// Format final\nmsg.ui_update = {\n    label: `${jour} ${date} ${moisNom}`\n};\n//msg.ui_update.label = `${jour} ${date} ${moisNom}`;\nmsg.payload = `${ heures }:${ minutes }`;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 320,
+        "y": 800,
+        "wires": [
+            [
+                "93def74eee21585b"
+            ]
+        ]
+    },
+    {
+        "id": "610750aab0f27969",
+        "type": "inject",
+        "z": "555c17e9a449000e",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "1",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 110,
+        "y": 800,
+        "wires": [
+            [
+                "30c8f2cbce75a2c0"
+            ]
+        ]
+    },
+    {
+        "id": "272d751b67f891d6",
+        "type": "function",
+        "z": "555c17e9a449000e",
+        "name": "fabrication topic",
+        "func": "let mac = msg.payload;\n\nif (!mac) return null;\n\nmsg.topic = \"ecocamp/tableau_bord/\"+ mac +\"/infos_hebergements\";\nmsg.action = \"subscribe\";\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 680,
+        "y": 360,
+        "wires": [
+            [
+                "b5491ed7db366960",
+                "14b554f6654ba346"
+            ]
+        ]
+    },
+    {
+        "id": "cd3b8d9cd69aa7df",
+        "type": "NetworkIntf",
+        "z": "555c17e9a449000e",
+        "name": "",
+        "x": 270,
+        "y": 360,
+        "wires": [
+            [
+                "d65e4eb6dc17bc4c"
+            ]
+        ]
+    },
+    {
+        "id": "b5491ed7db366960",
+        "type": "debug",
+        "z": "555c17e9a449000e",
+        "name": "debug 1.2",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 900,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "d65e4eb6dc17bc4c",
+        "type": "function",
+        "z": "555c17e9a449000e",
+        "name": "extract mac wlan0",
+        "func": "let mac = msg.payload.networkInterfaces.wlan0[0].mac;\n\nmsg.payload = mac;\n\nflow.set(\"mac\", msg.payload);\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 450,
+        "y": 360,
+        "wires": [
+            [
+                "fdd9d38ecc632ce7",
+                "272d751b67f891d6",
+                "6973194c29d67ec3"
+            ]
+        ]
+    },
+    {
+        "id": "5c61457a5f5ba42a",
+        "type": "inject",
+        "z": "555c17e9a449000e",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 110,
+        "y": 360,
+        "wires": [
+            [
+                "cd3b8d9cd69aa7df"
+            ]
+        ]
+    },
+    {
+        "id": "fdd9d38ecc632ce7",
+        "type": "debug",
+        "z": "555c17e9a449000e",
+        "name": "debug 1.1",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 680,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "14b554f6654ba346",
+        "type": "mqtt in",
+        "z": "555c17e9a449000e",
+        "name": "Infos_heberegements",
+        "topic": "",
+        "qos": "2",
+        "datatype": "utf8",
+        "broker": "09fa43511094c065",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 1,
+        "x": 920,
+        "y": 360,
+        "wires": [
+            [
+                "de6055fcf6e619e2",
+                "8c0cc27b3a250a16",
+                "393678fa309015dd",
+                "d77003bc61dd27dc"
+            ]
+        ]
+    },
+    {
+        "id": "8c0cc27b3a250a16",
+        "type": "function",
+        "z": "555c17e9a449000e",
+        "name": "function 1",
+        "func": "// Convertit la chaîne JSON en objet JavaScript\nlet data = JSON.parse(msg.payload);\n\n// Récupère la valeur de \"nom\"\nmsg.payload = data.nom;\n\nflow.set(\"nom\", msg.payload);\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1160,
+        "y": 360,
+        "wires": [
+            [
+                "f40251b467199fea",
+                "0cc1f32560c48ba1"
+            ]
+        ]
+    },
+    {
+        "id": "de6055fcf6e619e2",
+        "type": "debug",
+        "z": "555c17e9a449000e",
+        "name": "debug 1.3",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1160,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "393678fa309015dd",
+        "type": "function",
+        "z": "555c17e9a449000e",
+        "name": "quota_elec",
+        "func": "// Convertit la chaîne JSON en objet JavaScript\nlet data = JSON.parse(msg.payload);\n\n// Récupère la valeur de \"quota_electricite\"\nmsg.payload = data.quota_electricite;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1350,
+        "y": 420,
+        "wires": [
+            [
+                "65b2c37053f1a334",
+                "0431805713dae3d9"
+            ]
+        ]
+    },
+    {
+        "id": "65b2c37053f1a334",
+        "type": "debug",
+        "z": "555c17e9a449000e",
+        "name": "debug 2.3",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1520,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "0cc1f32560c48ba1",
+        "type": "debug",
+        "z": "555c17e9a449000e",
+        "name": "debug 1.4",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1360,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "8baf897d43a77884",
+        "type": "debug",
+        "z": "555c17e9a449000e",
+        "name": "debug 2.2",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1740,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "567bf809b1c239d6",
+        "type": "function",
+        "z": "555c17e9a449000e",
+        "name": "conso_elec",
+        "func": "// Convertit la chaîne JSON en objet JavaScript\nlet data = JSON.parse(msg.payload);\n\n// Récupère la valeur de \"electricite_kWh\"\nmsg.payload = data.historique_7j[0].electricite_kWh;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1550,
+        "y": 540,
+        "wires": [
+            [
+                "8baf897d43a77884",
+                "f1f963586601bc78"
+            ]
+        ]
+    },
+    {
+        "id": "6973194c29d67ec3",
+        "type": "function",
+        "z": "555c17e9a449000e",
+        "name": "fabrication topic",
+        "func": "let mac = msg.payload;\n\nif (!mac) return null;\n\nmsg.topic = \"ecocamp/tableau_bord/\"+ mac +\"/consommations_hebergements\";\nmsg.action = \"subscribe\";\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 680,
+        "y": 540,
+        "wires": [
+            [
+                "30e719f0d5f35af9",
+                "6ceb79c86717a826"
+            ]
+        ]
+    },
+    {
+        "id": "30e719f0d5f35af9",
+        "type": "mqtt in",
+        "z": "555c17e9a449000e",
+        "name": "consommations_hebergements",
+        "topic": "",
+        "qos": "2",
+        "datatype": "utf8",
+        "broker": "591adcc8d7e22b00",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 1,
+        "x": 930,
+        "y": 540,
+        "wires": [
+            [
+                "567bf809b1c239d6",
+                "19245b9f43cb0d24",
+                "8f1923516b6d0eb6",
+                "2f9871eb5166c060"
+            ]
+        ]
+    },
+    {
+        "id": "6ceb79c86717a826",
+        "type": "debug",
+        "z": "555c17e9a449000e",
+        "name": "debug 2.1",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 860,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "0431805713dae3d9",
+        "type": "function",
+        "z": "555c17e9a449000e",
+        "name": "config max",
+        "func": "var newmsg={}\n\n\n// Seuils en pourcentage\nlet seuil1 = 0.6;   // 60%\nlet seuil2 = 0.85;  // 85%\n\n// Calcul des bornes\nlet s1 = msg.payload * seuil1;\nlet s2 = msg.payload * seuil2;\n\n// Configuration dynamique des segments\nnewmsg.ui_update = {\n    segments: [\n        {\n            from: 0,\n            color: \"#00b050\"   // vert\n        },\n        {\n            from: s1,\n            color: \"#ffb000\"   // orange\n        },\n        {\n            from: s2,\n            color: \"#e00000\"   // rouge\n        }\n    ],\n    max: msg.payload\n};\n\n\nreturn newmsg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1550,
+        "y": 460,
+        "wires": [
+            [
+                "f1f963586601bc78"
+            ]
+        ]
+    },
+    {
+        "id": "eb0150e1e632550c",
+        "type": "ui-gauge",
+        "z": "555c17e9a449000e",
+        "name": "Eau",
+        "group": "544a42ad1a58b31b",
+        "order": 1,
+        "value": "payload",
+        "valueType": "msg",
+        "width": "3",
+        "height": "3",
+        "gtype": "gauge-half",
+        "gstyle": "rounded",
+        "title": "Eau",
+        "alwaysShowTitle": false,
+        "floatingTitlePosition": "top-left",
+        "units": "L",
+        "icon": "",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "from": "0",
+                "color": "#5cd65c",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "2000",
+                "color": "#ffc800",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "2500",
+                "color": "#ea5353",
+                "text": "",
+                "textType": "label"
+            }
+        ],
+        "min": 0,
+        "max": "3000",
+        "sizeThickness": "10",
+        "sizeGap": "1",
+        "sizeKeyThickness": "8",
+        "styleRounded": true,
+        "styleGlow": false,
+        "className": "",
+        "x": 1730,
+        "y": 720,
+        "wires": [
+            [
+                "dbab5c49594c285e"
+            ]
+        ]
+    },
+    {
+        "id": "6a3b6fe9ad53b9f9",
+        "type": "ui-template",
+        "z": "555c17e9a449000e",
+        "group": "1c53f384bae0b178",
+        "page": "",
+        "ui": "",
+        "name": "Programme Defilement vertical",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "head": "",
+        "format": "<div class=\"programme-container\">\n  <div class=\"programme-title\">Programme</div>\n  <div class=\"table-wrapper\">\n    <table>\n      <thead>\n        <tr>\n          <th style=\"width:30%;\">Date</th>\n          <th style=\"width:20%;\">Heure</th>\n          <th style=\"width:50%;\">Activité</th>\n        </tr>\n      </thead>\n    </table>\n\n    <div class=\"scroll-zone\">\n      <div class=\"scroll-content\" :class=\"{ animate: items.length > 6 }\" :style=\"animationStyle\">\n        <table>\n          <tbody>\n            <tr v-for=\"(item, index) in duplicatedItems\" :key=\"index\">\n              <td style=\"width:30%;\">{{ item.date }}</td>\n              <td style=\"width:20%;\">{{ item.heure }}</td>\n              <td style=\"width:50%;\">{{ item.text }}</td>\n            </tr>\n          </tbody>\n        </table>\n      </div>\n    </div>\n\n  </div>\n</div>\n\n<style>\n  .programme-container {\n    width: 100%;\n    font-size: 16px;\n  }\n\n  .programme-title {\n    font-weight: bold;\n    font-size: 22px;\n    text-align: center;\n    margin-bottom: 10px;\n  }\n\n  .table-wrapper {\n    width: 100%;\n  }\n\n  .scroll-zone {\n    height: 240px;\n    /* 6 lignes x 40px */\n    overflow: hidden;\n    position: relative;\n  }\n\n  table {\n    width: 100%;\n    border-collapse: collapse;\n  }\n\n  th,\n  td {\n    padding: 6px;\n    text-align: left;\n  }\n\n  tbody tr {\n    height: 40px;\n  }\n\n  /* Alternance légère */\n  tbody tr:nth-child(even) {\n    background-color: rgba(0, 0, 0, 0.05);\n  }\n\n  /* Animation */\n  .animate {\n    animation: scrollUp linear infinite;\n  }\n\n  @keyframes scrollUp {\n    from {\n      transform: translateY(0);\n    }\n\n    to {\n      transform: translateY(-50%);\n    }\n  }\n</style>\n\n<script>\n  export default {\n  data() {\n    return {\n      items: []\n    }\n  },\n\n  computed: {\n    duplicatedItems() {\n      if (this.items.length > 6) {\n        return [...this.items, ...this.items]\n      }\n      return this.items\n    },\n\n    animationStyle() {\n      if (this.items.length > 6) {\n        return {\n          animationDuration: (this.items.length * 3) + \"s\"\n        }\n      }\n      return {}\n    }\n  },\n\n  watch: {\n    msg: {\n      handler(newMsg) {\n        if (Array.isArray(newMsg?.payload)) {\n          this.items = newMsg.payload\n        }\n      },\n      deep: true,\n      immediate: true\n    }\n  }\n}\n</script>",
+        "storeOutMessages": true,
+        "passthru": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 690,
+        "y": 920,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "19245b9f43cb0d24",
+        "type": "function",
+        "z": "555c17e9a449000e",
+        "name": "function 2",
+        "func": "// Convertit la chaîne JSON en objet JavaScript\nlet data = JSON.parse(msg.payload);\n\n// Récupère la valeur de \"eau_L\"\nmsg.payload = data.historique_7j[0].eau_L;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1560,
+        "y": 760,
+        "wires": [
+            [
+                "eb0150e1e632550c",
+                "6839457b9fd04d16"
+            ]
+        ]
+    },
+    {
+        "id": "a3523ae8b45fbac9",
+        "type": "ui-template",
+        "z": "555c17e9a449000e",
+        "group": "3c49080f807568b7",
+        "page": "",
+        "ui": "",
+        "name": "Defilement horizontal",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "head": "",
+        "format": "<div class=\"marquee-container\">\n    <div class=\"marquee-text\">\n        {{msg.payload}}\n    </div>\n</div>\n\n<style>\n    .marquee-container {\n        width: 100%;\n        overflow: hidden;\n        white-space: nowrap;\n        box-sizing: border-box;\n        padding: 1px 0; /* réduit espace haut/bas */\n        margin: 0; /* supprime marges */\n       \n    }\n\n    .marquee-text {\n        display: inline-block;\n        padding-left: 100%;\n        animation: defilement 15s linear infinite;\n        font-size: 20px;\n        font-weight: bold;\n    }\n\n    @keyframes defilement {\n        0% {\n            transform: translateX(0);\n        }\n\n        100% {\n            transform: translateX(-100%);\n        }\n    }\n</style>",
+        "storeOutMessages": true,
+        "passthru": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 740,
+        "y": 980,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "975017da35e87cbb",
+        "type": "ui-chart",
+        "z": "555c17e9a449000e",
+        "group": "544a42ad1a58b31b",
+        "name": "Histo Elec",
+        "label": "",
+        "order": 4,
+        "chartType": "bar",
+        "category": "msg.topic",
+        "categoryType": "str",
+        "xAxisLabel": "Jours",
+        "xAxisProperty": "x",
+        "xAxisPropertyType": "property",
+        "xAxisType": "category",
+        "xAxisFormat": "",
+        "xAxisFormatType": "auto",
+        "xmin": "",
+        "xmax": "",
+        "yAxisLabel": "KwH",
+        "yAxisProperty": "y",
+        "yAxisPropertyType": "property",
+        "ymin": "",
+        "ymax": "",
+        "bins": 10,
+        "action": "append",
+        "stackSeries": false,
+        "pointShape": "circle",
+        "pointRadius": 4,
+        "showLegend": false,
+        "removeOlder": 1,
+        "removeOlderUnit": "3600",
+        "removeOlderPoints": "",
+        "colors": [
+            "#ff0000",
+            "#ff0000",
+            "#ff7f0e",
+            "#2ca02c",
+            "#a347e1",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "textColor": [
+            "#000000"
+        ],
+        "textColorDefault": true,
+        "gridColor": [
+            "#000000"
+        ],
+        "gridColorDefault": false,
+        "width": "3",
+        "height": "6",
+        "className": "",
+        "interpolation": "linear",
+        "x": 1560,
+        "y": 980,
+        "wires": [
+            [
+                "26322b4c90096cf8"
+            ]
+        ]
+    },
+    {
+        "id": "dbab5c49594c285e",
+        "type": "debug",
+        "z": "555c17e9a449000e",
+        "name": "debug 2.4",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1860,
+        "y": 720,
+        "wires": []
+    },
+    {
+        "id": "d77003bc61dd27dc",
+        "type": "function",
+        "z": "555c17e9a449000e",
+        "name": "quota_eau",
+        "func": "// Convertit la chaîne JSON en objet JavaScript\nlet data = JSON.parse(msg.payload);\n\n// Récupère la valeur de \"quota_eau\"\nmsg.payload = data.quota_eau;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1370,
+        "y": 640,
+        "wires": [
+            [
+                "336a9f0baf84a544",
+                "5c50628a47bd8ba2"
+            ]
+        ]
+    },
+    {
+        "id": "336a9f0baf84a544",
+        "type": "debug",
+        "z": "555c17e9a449000e",
+        "name": "debug 2.3",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1540,
+        "y": 640,
+        "wires": []
+    },
+    {
+        "id": "6839457b9fd04d16",
+        "type": "debug",
+        "z": "555c17e9a449000e",
+        "name": "debug 2.2",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1740,
+        "y": 760,
+        "wires": []
+    },
+    {
+        "id": "5c50628a47bd8ba2",
+        "type": "function",
+        "z": "555c17e9a449000e",
+        "name": "config max",
+        "func": "var newmsg={}\n\n\n// Seuils en pourcentage\nlet seuil1 = 0.6;   // 60%\nlet seuil2 = 0.85;  // 85%\n\n// Calcul des bornes\nlet s1 = msg.payload * seuil1;\nlet s2 = msg.payload * seuil2;\n\n// Configuration dynamique des segments\nnewmsg.ui_update = {\n    segments: [\n        {\n            from: 0,\n            color: \"#00b050\"   // vert\n        },\n        {\n            from: s1,\n            color: \"#ffb000\"   // orange\n        },\n        {\n            from: s2,\n            color: \"#e00000\"   // rouge\n        }\n    ],\n    max: msg.payload\n};\n\n\nreturn newmsg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1550,
+        "y": 680,
+        "wires": [
+            [
+                "eb0150e1e632550c"
+            ]
+        ]
+    },
+    {
+        "id": "431a0471a23577f0",
+        "type": "function",
+        "z": "555c17e9a449000e",
+        "name": "message_déroulant_Horizontal",
+        "func": "let data = msg.payload;\n\nif (typeof data === \"string\") {\n    data = JSON.parse(data);\n}\n\nif (!data.messages || !Array.isArray(data.messages)) {\n    node.error(\"messages introuvable dans payload\");\n    return null;\n}\n\nmsg.payload = data.messages.map(message => {\n    return `${message.date_debut}, ${message.horaire}, ${message.contenu}`;\n}).join(\" ---- \");\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 430,
+        "y": 980,
+        "wires": [
+            [
+                "727f4d220de25e33",
+                "a3523ae8b45fbac9"
+            ]
+        ]
+    },
+    {
+        "id": "727f4d220de25e33",
+        "type": "debug",
+        "z": "555c17e9a449000e",
+        "name": "debug 1",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 700,
+        "y": 1020,
+        "wires": []
+    },
+    {
+        "id": "07f1ba8f45a85542",
+        "type": "function",
+        "z": "555c17e9a449000e",
+        "name": "message_vertical",
+        "func": "let data = msg.payload;\n\nmsg.payload = data.evenements.map(evt => ({\n    date: evt.date_debut.substring(5),   // prend \"04-28\"\n    heure: evt.horaire.substring(0, 5),  // prend \"18:00\"\n    text: evt.contenu\n}));\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 410,
+        "y": 920,
+        "wires": [
+            [
+                "6a3b6fe9ad53b9f9",
+                "634514dd68c9dd67"
+            ]
+        ]
+    },
+    {
+        "id": "634514dd68c9dd67",
+        "type": "debug",
+        "z": "555c17e9a449000e",
+        "name": "debug 2",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 620,
+        "y": 880,
+        "wires": []
+    },
+    {
+        "id": "8f1923516b6d0eb6",
+        "type": "function",
+        "z": "555c17e9a449000e",
+        "name": "Eau",
+        "func": "let data = JSON.parse(msg.payload);\nlet historique = data.historique_7j;\n\n// garder valeurs valides\nhistorique = historique.filter(item => item.eau_L !== null);\n\nmsg.payload = historique.map(item => ({\n    x: item.date.split(\"-\").reverse().slice(0,2).join(\"/\"),\n    y: Number(item.eau_L)\n}));\n\nmsg.topic = \"Eau\";\nmsg.action = \"replace\";\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1350,
+        "y": 920,
+        "wires": [
+            [
+                "1a621dc9f7ba093b",
+                "8bd1e1cd06f22b26"
+            ]
+        ]
+    },
+    {
+        "id": "1a621dc9f7ba093b",
+        "type": "debug",
+        "z": "555c17e9a449000e",
+        "name": "debug 3",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1560,
+        "y": 880,
+        "wires": []
+    },
+    {
+        "id": "2f9871eb5166c060",
+        "type": "function",
+        "z": "555c17e9a449000e",
+        "name": "Elec",
+        "func": "let data = JSON.parse(msg.payload);\nlet historique = data.historique_7j;\n\n// garder valeurs valides\nhistorique = historique.filter(item => item.electricite_kWh !== null);\n\nmsg.payload = historique.map(item => ({\n    x: item.date.split(\"-\").reverse().slice(0,2).join(\"/\"),\n    y: Number(item.electricite_kWh)\n}));\n\nmsg.topic = \"Electricité\";\nmsg.action = \"replace\";\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1350,
+        "y": 980,
+        "wires": [
+            [
+                "975017da35e87cbb",
+                "c72862db1bdc551b"
+            ]
+        ]
+    },
+    {
+        "id": "c72862db1bdc551b",
+        "type": "debug",
+        "z": "555c17e9a449000e",
+        "name": "debug 4",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1560,
+        "y": 1020,
+        "wires": []
+    },
+    {
+        "id": "26322b4c90096cf8",
+        "type": "debug",
+        "z": "555c17e9a449000e",
+        "name": "debug 5",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1700,
+        "y": 980,
+        "wires": []
+    },
+    {
+        "id": "8bd1e1cd06f22b26",
+        "type": "ui-chart",
+        "z": "555c17e9a449000e",
+        "group": "544a42ad1a58b31b",
+        "name": "Histo Eau",
+        "label": "",
+        "order": 3,
+        "chartType": "bar",
+        "category": "msg.topic",
+        "categoryType": "str",
+        "xAxisLabel": "Jours",
+        "xAxisProperty": "x",
+        "xAxisPropertyType": "property",
+        "xAxisType": "category",
+        "xAxisFormat": "",
+        "xAxisFormatType": "auto",
+        "xmin": "",
+        "xmax": "",
+        "yAxisLabel": "Litre",
+        "yAxisProperty": "y",
+        "yAxisPropertyType": "property",
+        "ymin": "",
+        "ymax": "",
+        "bins": 10,
+        "action": "append",
+        "stackSeries": false,
+        "pointShape": "circle",
+        "pointRadius": 4,
+        "showLegend": false,
+        "removeOlder": 1,
+        "removeOlderUnit": "3600",
+        "removeOlderPoints": "",
+        "colors": [
+            "#3584e4",
+            "#ff0000",
+            "#ff7f0e",
+            "#2ca02c",
+            "#ff0000",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "textColor": [
+            "#000000"
+        ],
+        "textColorDefault": true,
+        "gridColor": [
+            "#000000"
+        ],
+        "gridColorDefault": false,
+        "width": "3",
+        "height": "6",
+        "className": "",
+        "interpolation": "linear",
+        "x": 1560,
+        "y": 920,
+        "wires": [
+            [
+                "67b35ec36b2db94d"
+            ]
+        ]
+    },
+    {
+        "id": "67b35ec36b2db94d",
+        "type": "debug",
+        "z": "555c17e9a449000e",
+        "name": "debug 6",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1700,
+        "y": 920,
+        "wires": []
+    },
+    {
+        "id": "5cb78b12aff0d4a4",
+        "type": "mqtt in",
+        "z": "555c17e9a449000e",
+        "name": "ecocamp/tableau_bord/messages",
+        "topic": "ecocamp/tableau_bord/messages",
+        "qos": "2",
+        "datatype": "utf8",
+        "broker": "591adcc8d7e22b00",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 150,
+        "y": 980,
+        "wires": [
+            [
+                "431a0471a23577f0"
+            ]
+        ]
+    },
+    {
+        "id": "c49572f0d1eed017",
+        "type": "mqtt in",
+        "z": "555c17e9a449000e",
+        "name": "ecocamp/tableau_bord/evenements",
+        "topic": "ecocamp/tableau_bord/evenements",
+        "qos": "2",
+        "datatype": "utf8",
+        "broker": "591adcc8d7e22b00",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 160,
+        "y": 920,
+        "wires": [
+            [
+                "07f1ba8f45a85542"
+            ]
+        ]
+    },
+    {
+        "id": "920e2f4a66864e30",
+        "type": "ui-group",
+        "name": "Entete",
+        "page": "b0cbb1f580cda958",
+        "width": "6",
+        "height": "1",
+        "order": 2,
+        "showTitle": false,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "544a42ad1a58b31b",
+        "type": "ui-group",
+        "name": "Consommations",
+        "page": "b0cbb1f580cda958",
+        "width": "6",
+        "height": "2",
+        "order": 4,
+        "showTitle": false,
+        "className": "groupe-centre",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "b0cbb1f580cda958",
+        "type": "ui-page",
+        "name": "Page 1",
+        "ui": "633b8a94bd62fc6f",
+        "path": "/page1",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "09dc0dcdd7206789",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Desktop",
+                "px": "800",
+                "cols": "12"
+            }
+        ],
+        "order": 1,
+        "className": "",
+        "visible": "false",
+        "disabled": "true"
+    },
+    {
+        "id": "fcbdd154beb2fa24",
+        "type": "ui-group",
+        "name": "Date_Heure",
+        "page": "b0cbb1f580cda958",
+        "width": "6",
+        "height": "1",
+        "order": 1,
+        "showTitle": false,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "09fa43511094c065",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "172.16.4.102",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "591adcc8d7e22b00",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "172.16.4.102",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "1c53f384bae0b178",
+        "type": "ui-group",
+        "name": "Message",
+        "page": "b0cbb1f580cda958",
+        "width": "6",
+        "height": "19",
+        "order": 3,
+        "showTitle": false,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "3c49080f807568b7",
+        "type": "ui-group",
+        "name": "Group 7",
+        "page": "b0cbb1f580cda958",
+        "width": "12",
+        "height": "1",
+        "order": 5,
+        "showTitle": false,
+        "className": "",
+        "visible": true,
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "633b8a94bd62fc6f",
+        "type": "ui-base",
+        "name": "My Dashboard",
+        "path": "/dashboard",
+        "appIcon": "",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control"
+        ],
+        "showPathInSidebar": false,
+        "headerContent": "none",
+        "navigationStyle": "none",
+        "titleBarStyle": "hidden",
+        "showReconnectNotification": true,
+        "notificationDisplayTime": "1",
+        "showDisconnectNotification": true,
+        "allowInstall": true
+    },
+    {
+        "id": "09dc0dcdd7206789",
+        "type": "ui-theme",
+        "name": "Default Theme",
+        "colors": {
+            "surface": "#ffffff",
+            "primary": "#0094ce",
+            "bgPage": "#ebecf1",
+            "groupBg": "#ffffff",
+            "groupOutline": "#cccccc"
+        },
+        "sizes": {
+            "density": "compact",
+            "pagePadding": "0px",
+            "groupGap": "0px",
+            "groupBorderRadius": "0px",
+            "widgetGap": "1px"
+        }
+    },
+    {
+        "id": "e2045bd005543d57",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "@flowfuse/node-red-dashboard": "1.30.2",
+            "node-red-contrib-os": "0.2.1"
+        }
+    }
+]
